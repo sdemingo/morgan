@@ -16,7 +16,10 @@ type Token struct {
 var eof = rune(0)
 
 const (
-	headerTk = iota + 1
+	header1Tk = iota + 1
+	header2Tk
+	header3Tk
+	header4Tk
 	textTk
 
 	headerPreffix   = "*"

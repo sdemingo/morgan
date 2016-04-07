@@ -1,6 +1,9 @@
 package main
 
-import "unicode/utf8"
+import (
+	"strings"
+	"unicode/utf8"
+)
 
 func initState(l *Lexer) stateFunc {
 
@@ -23,7 +26,24 @@ func initState(l *Lexer) stateFunc {
 }
 
 func headerState(l *Lexer) stateFunc {
-	l.emit(headerTk)
+
+	if strings.HasPrefix(l.input[l.pos:], "*") {
+		l.pos++
+		l.emit(header2Tk)
+		return initState
+	}
+	if strings.HasPrefix(l.input[l.pos:], "**") {
+		l.pos = l.pos + 2
+		l.emit(header3Tk)
+		return initState
+	}
+	if strings.HasPrefix(l.input[l.pos:], "***") {
+		l.pos = l.pos + 3
+		l.emit(header4Tk)
+		return initState
+	}
+
+	l.emit(header1Tk)
 	return initState
 }
 

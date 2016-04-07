@@ -1,28 +1,65 @@
 package main
 
-import "strings"
+import "unicode/utf8"
 
-const (
-	headerMark  = "*"
-	newLineMark = "\n"
-)
+func initState(l *Lexer) stateFunc {
 
-func lexHeader(l *Lexer) stateFunc {
-	for {
-		if strings.HasPrefix(l.input[l.pos:], headerMark) {
-			break
-		}
-		if l.next() == eof {
-			break
-		}
-	}
-
-	l.start = l.pos
-	l.pos = strings.Index(l.input[l.pos:], newLineMark)
-	if l.pos < 0 {
+	r := l.next()
+	if r == eof || !utf8.ValidRune(r) {
 		return nil
 	}
-	l.emit(headerTk)
 
-	return nil
+	if isWhitespace(r) {
+		return consume
+	}
+
+	switch r {
+	case '*':
+		return headerState
+	}
+
+	l.push(r)
+	return textState
+}
+
+func headerState(l *Lexer) stateFunc {
+	l.emit(headerTk)
+	return initState
+}
+
+func textState(l *Lexer) stateFunc {
+	var r rune
+	for {
+		r = l.next()
+		if r == eof {
+			return nil
+		}
+
+		if isWhitespace(r) {
+			break
+		}
+	}
+	l.emit(textTk)
+	l.push(r)
+	return initState
+}
+
+func consume(l *Lexer) stateFunc {
+	var r rune
+	for {
+		r = l.next()
+		if r == eof {
+			return nil
+		}
+
+		if !isWhitespace(r) {
+			break
+		}
+	}
+	l.push(r)
+	return initState
+}
+
+func isWhitespace(ch rune) bool {
+	return ch == ' ' || ch == '\t' || ch == '\n'
 }

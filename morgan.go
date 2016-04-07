@@ -8,16 +8,22 @@ import (
 
 type stateFunc func(*Lexer) stateFunc
 
-var initialState = lexHeader
-
 type Token struct {
 	ttype int
 	value string
 }
 
+var eof = rune(0)
+
 const (
-	eof = iota
-	headerTk
+	headerTk = iota + 1
+	textTk
+
+	headerPreffix   = "*"
+	preCodePreffix  = "="
+	italicPreffix   = "/"
+	listItemPreffix = "-"
+	linkPreffix     = "[["
 )
 
 type Lexer struct {
@@ -38,7 +44,7 @@ func Lex(input string) *Lexer {
 }
 
 func (l *Lexer) run() {
-	for state := initialState; state != nil; {
+	for state := initState; state != nil; {
 		state = state(l)
 	}
 	close(l.tokens)
@@ -59,6 +65,13 @@ func (l *Lexer) next() (rune rune) {
 	return rune
 }
 
+func (l *Lexer) push(rune rune) {
+	l.pos -= utf8.RuneLen(rune)
+	if l.pos < 0 {
+		l.pos = 0
+	}
+}
+
 func main() {
 	content, err := ioutil.ReadFile("prueba.org")
 	if err != nil {
@@ -67,8 +80,12 @@ func main() {
 	s := string(content)
 
 	lex := Lex(s)
+
 	for {
-		tk := <-lex.tokens
-		fmt.Printf("%v", tk)
+		tk, ok := <-lex.tokens
+		fmt.Printf("%d ", tk.ttype)
+		if !ok {
+			break
+		}
 	}
 }

@@ -1,6 +1,6 @@
 package main
 
-import "fmt"
+import "sync"
 
 type Stack []*Token
 
@@ -19,57 +19,75 @@ func (s *Stack) Pop() *Token {
 
 var stack Stack
 
-func (l *Lexer) code() {
-	l.output = ""
+type Coder struct {
+	lex    *Lexer
+	wg     sync.WaitGroup
+	output string
+}
+
+func HTMLCoder(l *Lexer) *Coder {
+	g := &Coder{
+		lex:    l,
+		output: ""}
+
+	g.wg.Add(1)
+	go g.run()
+	g.wg.Wait()
+
+	return g
+}
+
+func (g *Coder) run() {
+	g.output = ""
 	for {
-		tk, ok := <-l.tokens
+		tk, ok := <-g.lex.tokens
 		if !ok {
 			break
 		}
-		fmt.Printf("%d[%s] ", tk.ttype, tk.value)
+		//fmt.Printf("%d[%s] ", tk.ttype, tk.value)
 		switch tk.ttype {
 		case header1Tk, header2Tk, header3Tk, header4Tk:
-			codeHeader(l, tk, false)
+			codeHeader(g, tk, false)
 			stack.Push(&tk)
 
 		case newLineTk:
 			tkContext := stack.Pop()
 			if tkContext != nil && isHeader(tkContext) {
-				codeHeader(l, *tkContext, true)
+				codeHeader(g, *tkContext, true)
 			}
 
 		case textTk:
-			l.output += tk.value
+			g.output += tk.value
 		}
 	}
-	l.wg.Done()
+	g.wg.Done()
 }
 
-func codeHeader(l *Lexer, tk Token, close bool) {
+func codeHeader(g *Coder, tk Token, close bool) {
 	switch tk.ttype {
 	case header1Tk:
 		if close {
-			l.output += "</h1>\n"
+			g.output += "</h1>\n"
 		} else {
-			l.output += "\n<h1>"
+			g.output += "\n<h1>"
 		}
 	case header2Tk:
 		if close {
-			l.output += "</h2>\n"
+			g.output += "</h2>\n"
 		} else {
-			l.output += "\n<h2>"
+			g.output += "\n<h2>"
 		}
 	case header3Tk:
 		if close {
-			l.output += "</h3>\n"
+			g.output += "</h3>\n"
 		} else {
-			l.output += "\n<h3>"
+			g.output += "\n<h3>"
 		}
 	case header4Tk:
 		if close {
-			l.output += "</h4>\n"
+			g.output += "</h4>\n"
 		} else {
-			l.output += "\n<h4>"
+			g.output += "\n<h4>"
 		}
 	}
 }

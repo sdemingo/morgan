@@ -13,9 +13,9 @@ func main() {
 	s := string(content)
 
 	lexer := Lex(s)
-
+	code := HTMLCoder(lexer)
 	fmt.Println()
 	fmt.Println()
 	fmt.Println()
-	fmt.Println(lexer.output)
+	fmt.Println(code.output)
 }

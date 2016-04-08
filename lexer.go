@@ -37,7 +37,6 @@ type Lexer struct {
 	width  int
 	tokens chan Token
 	wg     sync.WaitGroup
-	output string
 }
 
 func Lex(input string) *Lexer {
@@ -46,12 +45,7 @@ func Lex(input string) *Lexer {
 		tokens: make(chan Token, 5),
 	}
 
-	l.wg.Add(2)
 	go l.lex()
-	go l.code()
-
-	l.wg.Wait()
-
 	return l
 }
 
@@ -60,7 +54,6 @@ func (l *Lexer) lex() {
 		state = state(l)
 	}
 	close(l.tokens)
-	l.wg.Done()
 }
 
 func (l *Lexer) emit(ttype int) {

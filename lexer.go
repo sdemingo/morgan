@@ -2,6 +2,7 @@ package main
 
 import (
 	"strings"
+	"sync"
 	"unicode/utf8"
 )
 
@@ -35,22 +36,31 @@ type Lexer struct {
 	pos    int // current position in the input
 	width  int
 	tokens chan Token
+	wg     sync.WaitGroup
+	output string
 }
 
 func Lex(input string) *Lexer {
 	l := &Lexer{
 		input:  input,
-		tokens: make(chan Token),
+		tokens: make(chan Token, 5),
 	}
-	go l.run() // Concurrently run state machine.
+
+	l.wg.Add(2)
+	go l.lex()
+	go l.code()
+
+	l.wg.Wait()
+
 	return l
 }
 
-func (l *Lexer) run() {
-	for state := initState; state != nil; {
+func (l *Lexer) lex() {
+	for state := lexInitState; state != nil; {
 		state = state(l)
 	}
 	close(l.tokens)
+	l.wg.Done()
 }
 
 func (l *Lexer) emit(ttype int) {
@@ -75,7 +85,7 @@ func (l *Lexer) push(rune rune) {
 	}
 }
 
-func initState(l *Lexer) stateFunc {
+func lexInitState(l *Lexer) stateFunc {
 
 	r := l.next()
 	if r == eof || !utf8.ValidRune(r) {
@@ -112,7 +122,7 @@ func newLineState(l *Lexer) stateFunc {
 
 	l.emit(newLineTk)
 	l.push(r)
-	return initState
+	return lexInitState
 }
 
 func headerState(l *Lexer) stateFunc {
@@ -120,21 +130,21 @@ func headerState(l *Lexer) stateFunc {
 	if strings.HasPrefix(l.input[l.pos:], "*") {
 		l.pos++
 		l.emit(header2Tk)
-		return initState
+		return lexInitState
 	}
 	if strings.HasPrefix(l.input[l.pos:], "**") {
 		l.pos = l.pos + 2
 		l.emit(header3Tk)
-		return initState
+		return lexInitState
 	}
 	if strings.HasPrefix(l.input[l.pos:], "***") {
 		l.pos = l.pos + 3
 		l.emit(header4Tk)
-		return initState
+		return lexInitState
 	}
 
 	l.emit(header1Tk)
-	return initState
+	return lexInitState
 }
 
 func textState(l *Lexer) stateFunc {
@@ -145,13 +155,13 @@ func textState(l *Lexer) stateFunc {
 			return nil
 		}
 
-		if isWhitespace(r) {
+		if isWhitespace(r) || isNewline(r) {
 			break
 		}
 	}
-	l.emit(textTk)
 	l.push(r)
-	return initState
+	l.emit(textTk)
+	return lexInitState
 }
 
 func consume(l *Lexer) stateFunc {
@@ -162,14 +172,22 @@ func consume(l *Lexer) stateFunc {
 			return nil
 		}
 
-		if !isWhitespace(r) {
+		if !isWhitespace(r) && !isNewline(r) {
 			break
 		}
 	}
 	l.push(r)
-	return initState
+	return lexInitState
 }
 
 func isWhitespace(ch rune) bool {
 	return ch == ' ' || ch == '\t'
+}
+
+func isNewline(ch rune) bool {
+	return ch == '\n'
+}
+
+func isHeader(tk *Token) bool {
+	return tk.ttype == header1Tk || tk.ttype == header2Tk || tk.ttype == header3Tk || tk.ttype == header4Tk
 }

@@ -12,7 +12,10 @@ func main() {
 	}
 	s := string(content)
 
-	lex := Lex(s)
-	parser := Build(lex.tokens)
-	fmt.Printf("\n%s\n", parser.code)
+	lexer := Lex(s)
+
+	fmt.Println()
+	fmt.Println()
+	fmt.Println()
+	fmt.Println(lexer.output)
 }

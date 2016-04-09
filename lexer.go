@@ -22,6 +22,8 @@ const (
 	header4Tk
 	textTk
 	newLineTk
+	hyphenTk
+	listTk
 
 	headerPreffix   = "*"
 	preCodePreffix  = "="
@@ -94,10 +96,17 @@ func lexInitState(l *Lexer) stateFunc {
 		return headerState
 	case '\n':
 		return newLineState
+	case '-':
+		return hyphenState
 	}
 
 	l.push(r)
 	return textState
+}
+
+func hyphenState(l *Lexer) stateFunc {
+	l.emit(hyphenTk)
+	return lexInitState
 }
 
 func newLineState(l *Lexer) stateFunc {
@@ -113,8 +122,8 @@ func newLineState(l *Lexer) stateFunc {
 		}
 	}
 
-	l.emit(newLineTk)
 	l.push(r)
+	l.emit(newLineTk)
 	return lexInitState
 }
 

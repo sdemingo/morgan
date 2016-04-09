@@ -1,6 +1,9 @@
 package main
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type Stack []*Token
 
@@ -44,7 +47,7 @@ func (g *Coder) run() {
 		if !ok {
 			break
 		}
-		//fmt.Printf("%d[%s] ", tk.ttype, tk.value)
+		fmt.Printf("%d[%s] ", tk.ttype, tk.value)
 		switch tk.ttype {
 		case header1Tk, header2Tk, header3Tk, header4Tk:
 			codeHeader(g, tk, false)
@@ -55,12 +58,29 @@ func (g *Coder) run() {
 			if tkContext != nil && isHeader(tkContext) {
 				codeHeader(g, *tkContext, true)
 			}
+			if tkContext != nil && tkContext.ttype == hyphenTk {
+				codeList(g, *tkContext, true)
+			}
 
 		case textTk:
 			g.output += tk.value
+
+		case hyphenTk:
+			codeList(g, tk, false)
+			stack.Push(&tk)
 		}
+
 	}
 	g.wg.Done()
+}
+
+func codeList(g *Coder, tk Token, close bool) {
+
+	if close {
+		g.output += "</li>"
+	} else {
+		g.output += "\n<li>"
+	}
 }
 
 func codeHeader(g *Coder, tk Token, close bool) {

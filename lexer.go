@@ -9,8 +9,9 @@ import (
 type stateFunc func(*Lexer) stateFunc
 
 type Token struct {
-	ttype int
-	value string
+	ttype  int
+	value  string
+	offset int
 }
 
 var eof = rune(0)
@@ -37,6 +38,7 @@ type Lexer struct {
 	start  int // start position of this item
 	pos    int // current position in the input
 	width  int
+	offset int // token offset in the line
 	tokens chan Token
 	wg     sync.WaitGroup
 }
@@ -45,6 +47,7 @@ func Lex(input string) *Lexer {
 	l := &Lexer{
 		input:  input,
 		tokens: make(chan Token, 5),
+		offset: 0,
 	}
 
 	go l.lex()
@@ -59,7 +62,7 @@ func (l *Lexer) lex() {
 }
 
 func (l *Lexer) emit(ttype int) {
-	l.tokens <- Token{ttype, l.input[l.start:l.pos]}
+	l.tokens <- Token{ttype, l.input[l.start:l.pos], l.offset}
 	l.start = l.pos
 }
 
@@ -87,6 +90,8 @@ func lexInitState(l *Lexer) stateFunc {
 		return nil
 	}
 
+	l.offset++
+
 	if isWhitespace(r) {
 		return consume
 	}
@@ -95,6 +100,7 @@ func lexInitState(l *Lexer) stateFunc {
 	case '*':
 		return headerState
 	case '\n':
+		l.offset = 0
 		return newLineState
 	case '-':
 		return hyphenState
@@ -122,8 +128,8 @@ func newLineState(l *Lexer) stateFunc {
 		}
 	}
 
-	l.push(r)
 	l.emit(newLineTk)
+	l.push(r)
 	return lexInitState
 }
 
@@ -161,8 +167,8 @@ func textState(l *Lexer) stateFunc {
 			break
 		}
 	}
-	l.push(r)
 	l.emit(textTk)
+	l.push(r)
 	return lexInitState
 }
 
@@ -174,7 +180,7 @@ func consume(l *Lexer) stateFunc {
 			return nil
 		}
 
-		if !isWhitespace(r) && !isNewline(r) {
+		if !isWhitespace(r) || !isNewline(r) {
 			break
 		}
 	}

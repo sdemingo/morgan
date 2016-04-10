@@ -47,7 +47,7 @@ func (g *Coder) run() {
 		if !ok {
 			break
 		}
-		fmt.Printf("%d[%s] ", tk.ttype, tk.value)
+		fmt.Printf("%d[%d][%s] ", tk.ttype, tk.offset, tk.value)
 		switch tk.ttype {
 		case header1Tk, header2Tk, header3Tk, header4Tk:
 			codeHeader(g, tk, false)
@@ -75,7 +75,6 @@ func (g *Coder) run() {
 }
 
 func codeList(g *Coder, tk Token, close bool) {
-
 	if close {
 		g.output += "</li>"
 	} else {

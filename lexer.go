@@ -83,6 +83,16 @@ func (l *Lexer) push(rune rune) {
 	}
 }
 
+func (l *Lexer) incOffset(rune rune) {
+	if isWhitespace(rune) || rune == '-' {
+		l.offset++
+	}
+
+	if isNewline(rune) {
+		l.offset = 0
+	}
+}
+
 func lexInitState(l *Lexer) stateFunc {
 
 	r := l.next()
@@ -90,7 +100,7 @@ func lexInitState(l *Lexer) stateFunc {
 		return nil
 	}
 
-	l.offset++
+	l.incOffset(r)
 
 	if isWhitespace(r) {
 		return consume

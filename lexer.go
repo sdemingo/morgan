@@ -149,9 +149,8 @@ func newLineState(l *Lexer) stateFunc {
 			break
 		}
 	}
-
-	l.emit(newLineTk)
 	l.unread(r)
+	l.emit(newLineTk)
 	return lexInitState
 }
 

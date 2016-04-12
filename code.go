@@ -14,18 +14,25 @@ func (s *Stack) Push(v *Token) {
 
 func (s *Stack) Pop() *Token {
 	if len(*s) <= 0 {
-		return nil
+		return nullToken
 	}
 	res := (*s)[len(*s)-1]
 	*s = (*s)[:len(*s)-1]
 	return res
 }
 
-var stack Stack
+func (s *Stack) Top() *Token {
+	if len(*s) <= 0 {
+		return nullToken
+	}
+	return (*s)[len(*s)-1]
+}
 
 type Coder struct {
 	lex    *Lexer
 	wg     sync.WaitGroup
+	stack  Stack
+	backed Stack
 	output string
 }
 
@@ -41,19 +48,28 @@ func HTMLCoder(l *Lexer) *Coder {
 	return g
 }
 
-func (g *Coder) getToken() *Token {
-	tk, ok := <-g.lex.tokens
-	if !ok {
-		return nil
+func (g *Coder) next() *Token {
+	tk := g.backed.Pop()
+	if tk.ttype != nullTk {
+		return tk
 	}
-	return &tk
+
+	tk, ok := <-g.lex.tokens
+	if ok {
+		return tk
+	}
+	return nullToken
+}
+
+func (g *Coder) back(t *Token) {
+	g.backed.Push(t)
 }
 
 func (g *Coder) run() {
 	g.output = ""
 	for {
-		tk := g.getToken()
-		if tk == nil {
+		tk := g.next()
+		if tk.ttype == nullTk {
 			break
 		}
 		tkDispatcher(g, tk)
@@ -63,46 +79,51 @@ func (g *Coder) run() {
 }
 
 func tkDispatcher(g *Coder, tk *Token) {
-	if tk == nil {
-		return
-	}
-	fmt.Printf("%d[%d][%s] ", tk.ttype, tk.offset, tk.value)
+
+	fmt.Println(tk)
+
+	checkFinishedLists(g, tk)
+
 	switch tk.ttype {
 	case header1Tk, header2Tk, header3Tk, header4Tk:
 		codeHeader(g, tk)
-
 	case italicTk:
 		codeItalic(g, tk)
 	case textTk:
 		g.output += strings.TrimSpace(tk.value) + " "
-
 	case hyphenTk:
-		codeItemList(g, tk, false)
+		codeItemList(g, tk)
 	}
 }
 
-func codeItemList(g *Coder, tk *Token, close bool) {
+func codeItemList(g *Coder, tk *Token) {
+
+	itemOffset := tk.offset + 1
+	rootListToken := Token{ulistTk, "ul", itemOffset - 1}
+
+	if g.stack.Top().ttype != ulistTk {
+		g.stack.Push(&rootListToken)
+		g.output += "\n<ul>"
+	}
+
 	g.output += "\n<li> "
+
 	for {
-		tk := g.getToken()
-		if tk == nil {
-			return
-		}
-		if tk.ttype == newLineTk {
+		tk := g.next()
+		if tk.offset < itemOffset && tk.ttype != newLineTk {
+			g.back(tk)
 			break
 		}
 		tkDispatcher(g, tk)
 	}
-	g.output += " </li>\n"
+
+	g.output += " </li>"
 }
 
 func codeItalic(g *Coder, tk *Token) {
 	g.output += " <i> "
 	for {
-		tk := g.getToken()
-		if tk == nil {
-			return
-		}
+		tk := g.next()
 		if tk.ttype == italicTk {
 			break
 		}
@@ -125,11 +146,7 @@ func codeHeader(g *Coder, tk *Token) {
 	}
 
 	for {
-		tk := g.getToken()
-		if tk == nil {
-			return
-		}
-
+		tk := g.next()
 		if tk.ttype == newLineTk {
 			break
 		}
@@ -148,4 +165,19 @@ func codeHeader(g *Coder, tk *Token) {
 		g.output += "</h4>\n"
 	}
 
+}
+
+func checkFinishedLists(g *Coder, tk *Token) {
+
+	tkContext := g.stack.Top()
+	if tkContext.ttype == ulistTk {
+		if tk.ttype != newLineTk && tk.offset < tkContext.offset {
+			g.output += "\n</ul>\n"
+			g.stack.Pop()
+		}
+
+		// TODO: in org mode lists can be finished with a
+		// double newLine character
+
+	}
 }

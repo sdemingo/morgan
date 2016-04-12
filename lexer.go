@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"unicode/utf8"
@@ -14,17 +15,23 @@ type Token struct {
 	offset int
 }
 
+func (tk *Token) String() string {
+	return fmt.Sprintf("[%d (%d)(%s)] ", tk.ttype, tk.offset, tk.value)
+}
+
 var eof = rune(0)
+var nullToken = &Token{ttype: nullTk, value: "NullToken"}
 
 const (
-	header1Tk = iota + 1
+	nullTk = iota
+	header1Tk
 	header2Tk
 	header3Tk
 	header4Tk
 	textTk
 	newLineTk
 	hyphenTk
-	listTk
+	ulistTk
 	italicTk
 
 	headerPreffix   = "*"
@@ -40,14 +47,14 @@ type Lexer struct {
 	pos    int // current position in the input
 	width  int
 	offset int // token offset in the line
-	tokens chan Token
+	tokens chan *Token
 	wg     sync.WaitGroup
 }
 
 func Lex(input string) *Lexer {
 	l := &Lexer{
 		input:  input,
-		tokens: make(chan Token, 5),
+		tokens: make(chan *Token, 5),
 		offset: 0,
 	}
 
@@ -63,7 +70,7 @@ func (l *Lexer) lex() {
 }
 
 func (l *Lexer) emit(ttype int) {
-	l.tokens <- Token{ttype, l.input[l.start:l.pos], l.offset}
+	l.tokens <- &Token{ttype, l.input[l.start:l.pos], l.offset}
 	l.start = l.pos
 }
 

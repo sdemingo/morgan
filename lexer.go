@@ -67,7 +67,7 @@ func (l *Lexer) emit(ttype int) {
 	l.start = l.pos
 }
 
-func (l *Lexer) next() (rune rune) {
+func (l *Lexer) read() (rune rune) {
 	if l.pos >= len(l.input) {
 		l.width = 0
 		return eof
@@ -77,7 +77,7 @@ func (l *Lexer) next() (rune rune) {
 	return rune
 }
 
-func (l *Lexer) push(rune rune) {
+func (l *Lexer) unread(rune rune) {
 	l.pos -= utf8.RuneLen(rune)
 	if l.pos < 0 {
 		l.pos = 0
@@ -96,7 +96,7 @@ func (l *Lexer) incOffset(rune rune) {
 
 func lexInitState(l *Lexer) stateFunc {
 
-	r := l.next()
+	r := l.read()
 	if r == eof || !utf8.ValidRune(r) {
 		return nil
 	}
@@ -121,7 +121,7 @@ func lexInitState(l *Lexer) stateFunc {
 		return lexInitState
 	}
 
-	l.push(r)
+	l.unread(r)
 	return textState
 }
 
@@ -133,7 +133,7 @@ func hyphenState(l *Lexer) stateFunc {
 func newLineState(l *Lexer) stateFunc {
 	var r rune
 	for {
-		r = l.next()
+		r = l.read()
 		if r == eof {
 			return nil
 		}
@@ -144,7 +144,7 @@ func newLineState(l *Lexer) stateFunc {
 	}
 
 	l.emit(newLineTk)
-	l.push(r)
+	l.unread(r)
 	return lexInitState
 }
 
@@ -173,7 +173,7 @@ func headerState(l *Lexer) stateFunc {
 func textState(l *Lexer) stateFunc {
 	var r rune
 	for {
-		r = l.next()
+		r = l.read()
 		if r == eof {
 			return nil
 		}
@@ -182,7 +182,7 @@ func textState(l *Lexer) stateFunc {
 			break
 		}
 	}
-	l.push(r)
+	l.unread(r)
 	l.emit(textTk)
 	return lexInitState
 }
@@ -190,7 +190,7 @@ func textState(l *Lexer) stateFunc {
 func consume(l *Lexer) stateFunc {
 	var r rune
 	for {
-		r = l.next()
+		r = l.read()
 		if r == eof {
 			return nil
 		}
@@ -199,7 +199,7 @@ func consume(l *Lexer) stateFunc {
 			break
 		}
 	}
-	l.push(r)
+	l.unread(r)
 	return lexInitState
 }
 

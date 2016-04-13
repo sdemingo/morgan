@@ -33,6 +33,7 @@ const (
 	hyphenTk
 	ulistTk
 	italicTk
+	monoTk
 
 	headerPreffix   = "*"
 	preCodePreffix  = "="
@@ -126,15 +127,13 @@ func lexInitState(l *Lexer) stateFunc {
 	case '/':
 		l.emit(italicTk)
 		return lexInitState
+	case '=':
+		l.emit(monoTk)
+		return lexInitState
 	}
 
 	l.unread(r)
 	return textState
-}
-
-func hyphenState(l *Lexer) stateFunc {
-	l.emit(hyphenTk)
-	return lexInitState
 }
 
 func newLineState(l *Lexer) stateFunc {
@@ -184,10 +183,11 @@ func textState(l *Lexer) stateFunc {
 			return nil
 		}
 
-		if isWhitespace(r) || isNewline(r) || r == '/' || r == '-' {
+		if isWhitespace(r) || isNewline(r) || r == '/' || r == '-' || r == '=' {
 			break
 		}
 	}
+
 	l.unread(r)
 	l.emit(textTk)
 	return lexInitState

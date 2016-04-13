@@ -87,8 +87,8 @@ func tkDispatcher(g *Coder, tk *Token) {
 	switch tk.ttype {
 	case header1Tk, header2Tk, header3Tk, header4Tk:
 		codeHeader(g, tk)
-	case italicTk:
-		codeItalic(g, tk)
+	case italicTk, monoTk:
+		codeInline(g, tk)
 	case textTk:
 		g.output += strings.TrimSpace(tk.value) + " "
 	case hyphenTk:
@@ -120,31 +120,21 @@ func codeItemList(g *Coder, tk *Token) {
 	g.output += " </li>"
 }
 
-func codeItalic(g *Coder, tk *Token) {
-	g.output += " <i> "
+func codeInline(g *Coder, tk *Token) {
+	g.output += " <" + tokenTag(tk) + "> "
 	for {
-		tk := g.next()
-		if tk.ttype == italicTk {
+		ntk := g.next()
+		if ntk.ttype == tk.ttype {
 			break
 		}
-		tkDispatcher(g, tk)
+		tkDispatcher(g, ntk)
 	}
-	g.output += " </i> "
+	g.output += " </" + tokenTag(tk) + "> "
 }
 
 func codeHeader(g *Coder, tk *Token) {
 
-	switch tk.ttype {
-	case header1Tk:
-		g.output += "\n<h1>"
-	case header2Tk:
-		g.output += "\n<h2>"
-	case header3Tk:
-		g.output += "\n<h3>"
-	case header4Tk:
-		g.output += "\n<h4>"
-	}
-
+	g.output += "\n<" + tokenTag(tk) + ">"
 	for {
 		tk := g.next()
 		if tk.ttype == newLineTk {
@@ -153,18 +143,25 @@ func codeHeader(g *Coder, tk *Token) {
 
 		tkDispatcher(g, tk)
 	}
+	g.output += "</" + tokenTag(tk) + ">\n"
+}
 
+func tokenTag(tk *Token) string {
 	switch tk.ttype {
+	case italicTk:
+		return "i"
+	case monoTk:
+		return "code"
 	case header1Tk:
-		g.output += "</h1>\n"
+		return "h1"
 	case header2Tk:
-		g.output += "</h2>\n"
+		return "h2"
 	case header3Tk:
-		g.output += "</h3>\n"
+		return "h3"
 	case header4Tk:
-		g.output += "</h4>\n"
+		return "h4"
 	}
-
+	return ""
 }
 
 func checkFinishedLists(g *Coder, tk *Token) {

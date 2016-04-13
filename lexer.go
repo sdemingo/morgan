@@ -34,6 +34,8 @@ const (
 	ulistTk
 	italicTk
 	monoTk
+	ulineTk
+	boldTk
 
 	headerPreffix   = "*"
 	preCodePreffix  = "="
@@ -127,6 +129,9 @@ func lexInitState(l *Lexer) stateFunc {
 	case '/':
 		l.emit(italicTk)
 		return lexInitState
+	case '_':
+		l.emit(ulineTk)
+		return lexInitState
 	case '=':
 		l.emit(monoTk)
 		return lexInitState
@@ -155,23 +160,27 @@ func newLineState(l *Lexer) stateFunc {
 
 func headerState(l *Lexer) stateFunc {
 
-	if strings.HasPrefix(l.input[l.pos:], "*") {
+	if strings.HasPrefix(l.input[l.pos:], " ") {
+		l.emit(header1Tk)
+		return lexInitState
+	}
+	if strings.HasPrefix(l.input[l.pos:], "* ") {
 		l.pos++
 		l.emit(header2Tk)
 		return lexInitState
 	}
-	if strings.HasPrefix(l.input[l.pos:], "**") {
+	if strings.HasPrefix(l.input[l.pos:], "** ") {
 		l.pos = l.pos + 2
 		l.emit(header3Tk)
 		return lexInitState
 	}
-	if strings.HasPrefix(l.input[l.pos:], "***") {
+	if strings.HasPrefix(l.input[l.pos:], "*** ") {
 		l.pos = l.pos + 3
 		l.emit(header4Tk)
 		return lexInitState
 	}
 
-	l.emit(header1Tk)
+	l.emit(boldTk)
 	return lexInitState
 }
 
@@ -183,7 +192,8 @@ func textState(l *Lexer) stateFunc {
 			return nil
 		}
 
-		if isWhitespace(r) || isNewline(r) || r == '/' || r == '-' || r == '=' {
+		if isWhitespace(r) || isNewline(r) || r == '/' ||
+			r == '-' || r == '=' || r == '_' || r == '*' {
 			break
 		}
 	}

@@ -87,7 +87,7 @@ func tkDispatcher(g *Coder, tk *Token) {
 	switch tk.ttype {
 	case header1Tk, header2Tk, header3Tk, header4Tk:
 		codeHeader(g, tk)
-	case italicTk, monoTk:
+	case italicTk, monoTk, ulineTk, boldTk:
 		codeInline(g, tk)
 	case textTk:
 		g.output += strings.TrimSpace(tk.value) + " "
@@ -152,6 +152,10 @@ func tokenTag(tk *Token) string {
 		return "i"
 	case monoTk:
 		return "code"
+	case ulineTk:
+		return "u"
+	case boldTk:
+		return "b"
 	case header1Tk:
 		return "h1"
 	case header2Tk:

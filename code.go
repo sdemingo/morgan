@@ -67,19 +67,17 @@ func (g *Coder) back(t *Token) {
 
 func (g *Coder) run() {
 	g.output = ""
+	defer g.wg.Done()
 	for {
 		tk := g.next()
 		if tk.ttype == nullTk {
-			break
+			return
 		}
 		tkDispatcher(g, tk)
-
 	}
-	g.wg.Done()
 }
 
 func tkDispatcher(g *Coder, tk *Token) {
-
 	fmt.Println(tk)
 
 	checkFinishedLists(g, tk)
@@ -109,12 +107,15 @@ func codeItemList(g *Coder, tk *Token) {
 	g.output += "\n<li> "
 
 	for {
-		tk := g.next()
-		if tk.offset < itemOffset && tk.ttype != newLineTk {
-			g.back(tk)
+		ntk := g.next()
+		if ntk.ttype == nullTk {
+			return
+		}
+		if ntk.offset < itemOffset && ntk.ttype != newLineTk {
+			g.back(ntk)
 			break
 		}
-		tkDispatcher(g, tk)
+		tkDispatcher(g, ntk)
 	}
 
 	g.output += " </li>"
@@ -124,6 +125,9 @@ func codeInline(g *Coder, tk *Token) {
 	g.output += " <" + tokenTag(tk) + "> "
 	for {
 		ntk := g.next()
+		if ntk.ttype == nullTk {
+			return
+		}
 		if ntk.ttype == tk.ttype {
 			break
 		}
@@ -136,12 +140,15 @@ func codeHeader(g *Coder, tk *Token) {
 
 	g.output += "\n<" + tokenTag(tk) + ">"
 	for {
-		tk := g.next()
-		if tk.ttype == newLineTk {
+		ntk := g.next()
+		if ntk.ttype == nullTk {
+			return
+		}
+		if ntk.ttype == newLineTk {
 			break
 		}
 
-		tkDispatcher(g, tk)
+		tkDispatcher(g, ntk)
 	}
 	g.output += "</" + tokenTag(tk) + ">\n"
 }

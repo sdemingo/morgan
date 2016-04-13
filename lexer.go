@@ -36,12 +36,7 @@ const (
 	monoTk
 	ulineTk
 	boldTk
-
-	headerPreffix   = "*"
-	preCodePreffix  = "="
-	italicPreffix   = "/"
-	listItemPreffix = "-"
-	linkPreffix     = "[["
+	urlTk
 )
 
 type Lexer struct {
@@ -87,6 +82,11 @@ func (l *Lexer) read() (rune rune) {
 	return rune
 }
 
+func (l *Lexer) prev() (rune rune) {
+	rune, _ = utf8.DecodeRuneInString(l.input[l.pos-2 : l.pos-1])
+	return rune
+}
+
 func (l *Lexer) unread(rune rune) {
 	l.pos -= utf8.RuneLen(rune)
 	if l.pos < 0 {
@@ -119,7 +119,15 @@ func lexInitState(l *Lexer) stateFunc {
 
 	switch r {
 	case '*':
-		return headerState
+		prev := l.prev()
+		next := l.read()
+		if isNewline(prev) && isWhitespace(next) {
+			l.unread(next)
+			return headerState
+		}
+		l.unread(next)
+		l.emit(boldTk)
+		return lexInitState
 	case '\n':
 		l.offset = 0
 		return newLineState
@@ -160,10 +168,6 @@ func newLineState(l *Lexer) stateFunc {
 
 func headerState(l *Lexer) stateFunc {
 
-	if strings.HasPrefix(l.input[l.pos:], " ") {
-		l.emit(header1Tk)
-		return lexInitState
-	}
 	if strings.HasPrefix(l.input[l.pos:], "* ") {
 		l.pos++
 		l.emit(header2Tk)
@@ -180,7 +184,7 @@ func headerState(l *Lexer) stateFunc {
 		return lexInitState
 	}
 
-	l.emit(boldTk)
+	l.emit(header1Tk)
 	return lexInitState
 }
 
@@ -192,8 +196,16 @@ func textState(l *Lexer) stateFunc {
 			return nil
 		}
 
-		if isWhitespace(r) || isNewline(r) || r == '/' ||
-			r == '-' || r == '=' || r == '_' || r == '*' {
+		if isEndWord(r) {
+			break
+		}
+
+		if r == '/' || r == '-' || r == '=' || r == '_' || r == '*' {
+			/*nr := l.read()
+			if nr != eof && isEndWord(nr) {
+				l.unread(nr)
+				break
+			}*/
 			break
 		}
 	}
@@ -225,6 +237,10 @@ func isWhitespace(ch rune) bool {
 
 func isNewline(ch rune) bool {
 	return ch == '\n'
+}
+
+func isEndWord(ch rune) bool {
+	return isWhitespace(ch) || isNewline(ch)
 }
 
 func isHeader(tk *Token) bool {

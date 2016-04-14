@@ -194,11 +194,14 @@ func headerState(l *Lexer) stateFunc {
 
 func textState(l *Lexer) stateFunc {
 	var r rune
-	for {
 
+	if strings.HasPrefix(l.input[l.pos:], "http://") {
+		return urlState
+	}
+
+	for {
 		// consume runes of a word until spaces, reserved
 		// characters or  punctuaction
-
 		r = l.read()
 		if r == eof {
 			return nil
@@ -219,6 +222,24 @@ func textState(l *Lexer) stateFunc {
 
 	l.unread(r)
 	l.emit(textTk)
+	return lexInitState
+}
+
+func urlState(l *Lexer) stateFunc {
+	var r rune
+	for {
+		// consume runes of a word until spaces
+		r = l.read()
+		if r == eof {
+			return nil
+		}
+
+		if isWhitespace(r) || isNewline(r) {
+			break
+		}
+	}
+	l.unread(r)
+	l.emit(urlTk)
 	return lexInitState
 }
 

@@ -89,6 +89,8 @@ func tkDispatcher(g *Coder, tk *Token) {
 		codeInline(g, tk)
 	case textTk:
 		g.output += strings.TrimSpace(tk.value) + " "
+	case urlTk:
+		codeDirectUrl(g, tk)
 	case hyphenTk:
 		codeItemList(g, tk)
 	}
@@ -134,6 +136,11 @@ func codeInline(g *Coder, tk *Token) {
 		tkDispatcher(g, ntk)
 	}
 	g.output += " </" + tokenTag(tk) + "> "
+}
+
+func codeDirectUrl(g *Coder, tk *Token) {
+	url := strings.TrimSpace(tk.value)
+	g.output += "<a href=\"" + url + "\">" + url + "</a>"
 }
 
 func codeHeader(g *Coder, tk *Token) {

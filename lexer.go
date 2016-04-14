@@ -23,17 +23,17 @@ var eof = rune(0)
 var nullToken = &Token{ttype: nullTk, value: "NullToken"}
 
 const (
-	nullTk = iota
-	header1Tk
+	nullTk    = iota
+	header1Tk //1
 	header2Tk
 	header3Tk
 	header4Tk
-	textTk
+	textTk // 5
 	newLineTk
 	hyphenTk
 	ulistTk
 	italicTk
-	monoTk
+	monoTk //10
 	ulineTk
 	boldTk
 	urlTk
@@ -117,6 +117,10 @@ func lexInitState(l *Lexer) stateFunc {
 		return consume
 	}
 
+	if isPunctuation(r) {
+		return lexInitState
+	}
+
 	switch r {
 	case '*':
 		prev := l.prev()
@@ -191,6 +195,10 @@ func headerState(l *Lexer) stateFunc {
 func textState(l *Lexer) stateFunc {
 	var r rune
 	for {
+
+		// consume runes of a word until spaces, reserved
+		// characters or  punctuaction
+
 		r = l.read()
 		if r == eof {
 			return nil
@@ -200,13 +208,12 @@ func textState(l *Lexer) stateFunc {
 			break
 		}
 
-		if r == '/' || r == '-' || r == '=' || r == '_' || r == '*' {
-			/*nr := l.read()
+		if r == '/' || r == '-' || r == '=' || r == '_' || r == '*' || r == '=' {
+			nr := l.read()
 			if nr != eof && isEndWord(nr) {
 				l.unread(nr)
 				break
-			}*/
-			break
+			}
 		}
 	}
 
@@ -240,7 +247,11 @@ func isNewline(ch rune) bool {
 }
 
 func isEndWord(ch rune) bool {
-	return isWhitespace(ch) || isNewline(ch)
+	return isWhitespace(ch) || isNewline(ch) || isPunctuation(ch)
+}
+
+func isPunctuation(ch rune) bool {
+	return ch == '.'
 }
 
 func isHeader(tk *Token) bool {

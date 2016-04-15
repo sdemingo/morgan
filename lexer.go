@@ -156,12 +156,12 @@ func lexInitState(l *Lexer) stateFunc {
 
 func newLineState(l *Lexer) stateFunc {
 	var r rune
+	c := 0
 	for {
 		r = l.read()
 		if r == eof {
 			return nil
 		}
-
 		if r != '\n' {
 			break
 		}
@@ -246,10 +246,6 @@ func urlState(l *Lexer) stateFunc {
 	l.unread(r)
 	l.emit(urlTk)
 
-	if consumeString(l, "]]") > 0 { // link has no desc text
-		return lexInitState
-	}
-
 	if consumeString(l, "][") > 0 { // link has a desc text
 		for {
 			r = l.read()
@@ -260,8 +256,12 @@ func urlState(l *Lexer) stateFunc {
 				break
 			}
 		}
+		l.unread(r)
 		l.emit(urlTextTk)
-		consumeString(l, "]")
+	}
+
+	if consumeString(l, "]]") > 0 { // link has no desc text
+		return lexInitState
 	}
 
 	return lexInitState

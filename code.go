@@ -140,7 +140,14 @@ func codeInline(g *Coder, tk *Token) {
 
 func codeDirectUrl(g *Coder, tk *Token) {
 	url := strings.TrimSpace(tk.value)
-	g.output += "<a href=\"" + url + "\">" + url + "</a>"
+
+	ntk := g.next()
+	if ntk.ttype == urlTextTk {
+		g.output += "<a href=\"" + url + "\">" + ntk.value + "</a>"
+	} else {
+		g.output += "<a href=\"" + url + "\">" + url + "</a>"
+		g.back(ntk)
+	}
 }
 
 func codeHeader(g *Coder, tk *Token) {

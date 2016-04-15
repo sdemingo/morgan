@@ -37,6 +37,7 @@ const (
 	ulineTk
 	boldTk
 	urlTk
+	urlTextTk
 )
 
 type Lexer struct {
@@ -195,7 +196,9 @@ func headerState(l *Lexer) stateFunc {
 func textState(l *Lexer) stateFunc {
 	var r rune
 
-	if strings.HasPrefix(l.input[l.pos:], "http://") {
+	if strings.HasPrefix(l.input[l.pos:], "http://") ||
+		strings.HasPrefix(l.input[l.pos:], "[[") {
+
 		return urlState
 	}
 
@@ -227,6 +230,8 @@ func textState(l *Lexer) stateFunc {
 
 func urlState(l *Lexer) stateFunc {
 	var r rune
+
+	consumeString(l, "[[")
 	for {
 		// consume runes of a word until spaces
 		r = l.read()
@@ -234,12 +239,31 @@ func urlState(l *Lexer) stateFunc {
 			return nil
 		}
 
-		if isWhitespace(r) || isNewline(r) {
+		if isWhitespace(r) || isNewline(r) || r == ']' {
 			break
 		}
 	}
 	l.unread(r)
 	l.emit(urlTk)
+
+	if consumeString(l, "]]") > 0 { // link has no desc text
+		return lexInitState
+	}
+
+	if consumeString(l, "][") > 0 { // link has a desc text
+		for {
+			r = l.read()
+			if r == eof {
+				return nil
+			}
+			if r == ']' {
+				break
+			}
+		}
+		l.emit(urlTextTk)
+		consumeString(l, "]")
+	}
+
 	return lexInitState
 }
 
@@ -257,6 +281,15 @@ func consume(l *Lexer) stateFunc {
 	}
 	l.unread(r)
 	return lexInitState
+}
+
+func consumeString(l *Lexer, pref string) int {
+	if strings.HasPrefix(l.input[l.pos:], pref) {
+		l.pos += len(pref)
+		l.start = l.pos
+		return len(pref)
+	}
+	return -1
 }
 
 func isWhitespace(ch rune) bool {

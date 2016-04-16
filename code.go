@@ -93,6 +93,17 @@ func tkDispatcher(g *Coder, tk *Token) {
 		codeDirectUrl(g, tk)
 	case hyphenTk:
 		codeItemList(g, tk)
+	case newLineTk:
+		codeNewLine(g, tk)
+	}
+}
+
+func codeNewLine(g *Coder, tk *Token) {
+	ntk := g.next()
+	if ntk.ttype == newLineTk {
+		g.output += "\n<br>\n"
+	} else {
+		g.back(ntk)
 	}
 }
 

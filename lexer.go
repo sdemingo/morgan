@@ -162,12 +162,16 @@ func newLineState(l *Lexer) stateFunc {
 		if r == eof {
 			return nil
 		}
+		c++
 		if r != '\n' {
 			break
 		}
 	}
 	l.unread(r)
 	l.emit(newLineTk)
+	if c > 1 {
+		l.emit(newLineTk)
+	}
 	return lexInitState
 }
 

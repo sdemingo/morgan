@@ -1,0 +1,31 @@
+
+* Morgan
+
+Morgan is an [[http://orgmode.org][Org-mode]] parser writed in Go. By now, Morgan only write HTML code
+from the org file.
+
+#+BEGIN_SRC C
+package main
+
+import (
+	"fmt"
+	"github.com/sdemingo/morgan"
+)
+
+func main() {
+	content := `
+,* Title of article
+
+Nunc eleifend leo vitae magna. In id erat non orci commodo
+lobortis. [[http://url.com][Proin neque massa]], cursus ut, gravida
+ut.  `
+
+	parser := morgan.HTMLParser(content)
+	fmt.Println(parser.Output())
+
+}
+
+#+END_SRC
+
+
+

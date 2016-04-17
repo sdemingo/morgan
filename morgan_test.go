@@ -7,7 +7,7 @@ import (
 )
 
 func TestHTMLCoder(t *testing.T) {
-	content, err := ioutil.ReadFile("prueba.org")
+	content, err := ioutil.ReadFile("testfiles/prueba.org")
 	if err != nil {
 		panic(err)
 	}

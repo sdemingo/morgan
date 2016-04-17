@@ -1,0 +1,27 @@
+Pellentesque dapibus. Preparamos 
+una lista:
+ - item1
+ - item2
+ - item3. Esto vale también para otro alinea
+   segunda linea del mismo item. Esto ya no estaría en la lista de arriba a
+   
+
+   pesar de estar igual identado
+
+* Cabecera con /letras cursivas/
+Suspendisse potenti.  Aenean in sem ac leo =mollis blandit=. Esto se escribe con
+mono fuente _y esto debería ir subrayado_ y esto 
+*debería ir en negrita* y esto es un enlace directo http://www.google.com
+
+* Cabecera 2
+Pellentesque dapibus suscipit. Donec posuere augue in quam. /Etiam vel tortor
+sodales/ tellus ultricies commodo. (Fin del) documento. Pruebo una ( /cursiva
+entre parentesis/ ).
+
+Esto es un enlace directo a http://gmail.com
+
+Ahora meto un [[http://www.google.com][enlace a google]] para ver que pasa y también enlazo una imagen
+local a ver como funciona:
+[[/home/sdemingo/Dropbox/Photos/Autocaravana/IMG_20140112_131349.jpg]]
+
+si solo hay [corchetes no tenemos] nada especial.

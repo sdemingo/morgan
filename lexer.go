@@ -1,4 +1,4 @@
-package main
+package morgan
 
 import (
 	"fmt"
@@ -50,7 +50,7 @@ type Lexer struct {
 	wg     sync.WaitGroup
 }
 
-func Lex(input string) *Lexer {
+func newLexer(input string) *Lexer {
 	l := &Lexer{
 		input:  input,
 		tokens: make(chan *Token, 5),

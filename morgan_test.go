@@ -1,21 +1,21 @@
-package main
+package morgan
 
 import (
 	"fmt"
 	"io/ioutil"
+	"testing"
 )
 
-func main() {
+func TestHTMLCoder(t *testing.T) {
 	content, err := ioutil.ReadFile("prueba.org")
 	if err != nil {
 		panic(err)
 	}
 	s := string(content)
 
-	lexer := Lex(s)
-	code := HTMLCoder(lexer)
+	parser := HTMLParser(s)
 	fmt.Println()
 	fmt.Println()
 	fmt.Println()
-	fmt.Println(code.output)
+	fmt.Println(parser.Output())
 }

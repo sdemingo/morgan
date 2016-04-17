@@ -1,4 +1,4 @@
-package main
+package morgan
 
 import (
 	"fmt"
@@ -8,11 +8,11 @@ import (
 
 type Stack []*Token
 
-func (s *Stack) Push(v *Token) {
+func (s *Stack) push(v *Token) {
 	*s = append(*s, v)
 }
 
-func (s *Stack) Pop() *Token {
+func (s *Stack) pop() *Token {
 	if len(*s) <= 0 {
 		return nullToken
 	}
@@ -21,7 +21,7 @@ func (s *Stack) Pop() *Token {
 	return res
 }
 
-func (s *Stack) Top() *Token {
+func (s *Stack) top() *Token {
 	if len(*s) <= 0 {
 		return nullToken
 	}
@@ -36,7 +36,8 @@ type Coder struct {
 	output string
 }
 
-func HTMLCoder(l *Lexer) *Coder {
+func HTMLParser(input string) *Coder {
+	l := newLexer(input)
 	g := &Coder{
 		lex:    l,
 		output: ""}
@@ -48,8 +49,12 @@ func HTMLCoder(l *Lexer) *Coder {
 	return g
 }
 
+func (g *Coder) Output() string {
+	return g.output
+}
+
 func (g *Coder) next() *Token {
-	tk := g.backed.Pop()
+	tk := g.backed.pop()
 	if tk.ttype != nullTk {
 		return tk
 	}
@@ -62,7 +67,7 @@ func (g *Coder) next() *Token {
 }
 
 func (g *Coder) back(t *Token) {
-	g.backed.Push(t)
+	g.backed.push(t)
 }
 
 func (g *Coder) run() {
@@ -112,8 +117,8 @@ func codeItemList(g *Coder, tk *Token) {
 	itemOffset := tk.offset + 1
 	rootListToken := Token{ulistTk, "ul", itemOffset - 1}
 
-	if g.stack.Top().ttype != ulistTk {
-		g.stack.Push(&rootListToken)
+	if g.stack.top().ttype != ulistTk {
+		g.stack.push(&rootListToken)
 		g.output += "\n<ul>"
 	}
 
@@ -202,11 +207,11 @@ func tokenTag(tk *Token) string {
 
 func checkFinishedLists(g *Coder, tk *Token) {
 
-	tkContext := g.stack.Top()
+	tkContext := g.stack.top()
 	if tkContext.ttype == ulistTk {
 		if tk.ttype != newLineTk && tk.offset < tkContext.offset {
 			g.output += "\n</ul>\n"
-			g.stack.Pop()
+			g.stack.pop()
 		}
 
 		// TODO: in org mode lists can be finished with a

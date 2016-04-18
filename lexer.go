@@ -115,7 +115,12 @@ func lexInitState(l *Lexer) stateFunc {
 	l.incOffset(r)
 
 	if isWhitespace(r) {
-		return consume
+		return consumeSpaces
+	}
+
+	if isNewline(r) {
+		l.offset = 0
+		return consumeNewLines
 	}
 
 	if isPunctuation(r) {
@@ -133,9 +138,6 @@ func lexInitState(l *Lexer) stateFunc {
 		l.unread(next)
 		l.emit(boldTk)
 		return lexInitState
-	case '\n':
-		l.offset = 0
-		return newLineState
 	case '-':
 		l.emit(hyphenTk)
 		return lexInitState
@@ -152,27 +154,6 @@ func lexInitState(l *Lexer) stateFunc {
 
 	l.unread(r)
 	return textState
-}
-
-func newLineState(l *Lexer) stateFunc {
-	var r rune
-	c := 0
-	for {
-		r = l.read()
-		if r == eof {
-			return nil
-		}
-		c++
-		if r != '\n' {
-			break
-		}
-	}
-	l.unread(r)
-	l.emit(newLineTk)
-	if c > 1 {
-		l.emit(newLineTk)
-	}
-	return lexInitState
 }
 
 func headerState(l *Lexer) stateFunc {
@@ -271,7 +252,29 @@ func urlState(l *Lexer) stateFunc {
 	return lexInitState
 }
 
-func consume(l *Lexer) stateFunc {
+func consumeNewLines(l *Lexer) stateFunc {
+	var r rune
+	c := 0
+	for {
+		r = l.read()
+		if r == eof {
+			l.emit(newLineTk)
+			return nil
+		}
+		c++
+		if r != '\n' {
+			break
+		}
+	}
+	l.unread(r)
+	l.emit(newLineTk)
+	if c > 1 {
+		l.emit(newLineTk)
+	}
+	return lexInitState
+}
+
+func consumeSpaces(l *Lexer) stateFunc {
 	var r rune
 	for {
 		r = l.read()
@@ -279,7 +282,7 @@ func consume(l *Lexer) stateFunc {
 			return nil
 		}
 
-		if !isWhitespace(r) || !isNewline(r) {
+		if !isWhitespace(r) {
 			break
 		}
 	}

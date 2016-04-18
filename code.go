@@ -6,6 +6,8 @@ import (
 	"sync"
 )
 
+const debugMode = true
+
 type Stack []*Token
 
 func (s *Stack) push(v *Token) {
@@ -83,7 +85,9 @@ func (g *Coder) run() {
 }
 
 func tkDispatcher(g *Coder, tk *Token) {
-	fmt.Println(tk)
+	if debugMode {
+		fmt.Println(tk)
+	}
 
 	checkFinishedLists(g, tk)
 
@@ -104,12 +108,18 @@ func tkDispatcher(g *Coder, tk *Token) {
 }
 
 func codeNewLine(g *Coder, tk *Token) {
+	stk := g.stack.pop()
+	if stk.ttype == header1Tk {
+		g.output += "</" + tokenTag(stk) + ">\n"
+		return
+	}
+
 	ntk := g.next()
 	if ntk.ttype == newLineTk {
 		g.output += "\n<br>\n"
-	} else {
-		g.back(ntk)
 	}
+	g.back(ntk)
+
 }
 
 func codeItemList(g *Coder, tk *Token) {
@@ -169,18 +179,7 @@ func codeDirectUrl(g *Coder, tk *Token) {
 func codeHeader(g *Coder, tk *Token) {
 
 	g.output += "\n<" + tokenTag(tk) + ">"
-	for {
-		ntk := g.next()
-		if ntk.ttype == nullTk {
-			return
-		}
-		if ntk.ttype == newLineTk {
-			break
-		}
-
-		tkDispatcher(g, ntk)
-	}
-	g.output += "</" + tokenTag(tk) + ">\n"
+	g.stack.push(tk)
 }
 
 func tokenTag(tk *Token) string {

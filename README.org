@@ -4,6 +4,16 @@
 Morgan is an [[http://orgmode.org][Org-mode]] parser writed in Go. By now, Morgan only write HTML code
 from the org file.
 
+** Example
+
+To get the package you can use =go get= command:
+
+#+BEGIN_SRC sh
+go get github.com/sdemingo/morgan
+#+END_SRC
+
+Now you can test the package with the following example:
+
 #+BEGIN_SRC C
 package main
 
@@ -24,7 +34,6 @@ ut.  `
 	fmt.Println(parser.Output())
 
 }
-
 #+END_SRC
 
 

@@ -84,7 +84,11 @@ func (l *Lexer) read() (rune rune) {
 }
 
 func (l *Lexer) prev() (rune rune) {
+	if l.pos-2 < 0 {
+		return '\n'
+	}
 	rune, _ = utf8.DecodeRuneInString(l.input[l.pos-2 : l.pos-1])
+
 	return rune
 }
 
@@ -131,7 +135,7 @@ func lexInitState(l *Lexer) stateFunc {
 	case '*':
 		prev := l.prev()
 		next := l.read()
-		if isNewline(prev) && isWhitespace(next) {
+		if isNewline(prev) && (isWhitespace(next) || next == '*') {
 			l.unread(next)
 			return headerState
 		}
@@ -312,7 +316,7 @@ func isEndWord(ch rune) bool {
 }
 
 func isPunctuation(ch rune) bool {
-	return ch == '.'
+	return ch == '.' || ch == ','
 }
 
 func isHeader(tk *Token) bool {

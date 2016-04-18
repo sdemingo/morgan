@@ -97,7 +97,7 @@ func tkDispatcher(g *Coder, tk *Token) {
 	case italicTk, monoTk, ulineTk, boldTk:
 		codeInline(g, tk)
 	case textTk:
-		g.output += strings.TrimSpace(tk.value) + " "
+		g.output += tk.value
 	case urlTk:
 		codeDirectUrl(g, tk)
 	case hyphenTk:
@@ -109,7 +109,7 @@ func tkDispatcher(g *Coder, tk *Token) {
 
 func codeNewLine(g *Coder, tk *Token) {
 	stk := g.stack.pop()
-	if stk.ttype == header1Tk {
+	if isHeader(stk) {
 		g.output += "</" + tokenTag(stk) + ">\n"
 		return
 	}
@@ -169,9 +169,9 @@ func codeDirectUrl(g *Coder, tk *Token) {
 
 	ntk := g.next()
 	if ntk.ttype == urlTextTk {
-		g.output += "<a href=\"" + url + "\">" + ntk.value + "</a>"
+		g.output += " <a href=\"" + url + "\">" + ntk.value + "</a> "
 	} else {
-		g.output += "<a href=\"" + url + "\">" + url + "</a>"
+		g.output += " <a href=\"" + url + "\">" + url + "</a> "
 		g.back(ntk)
 	}
 }

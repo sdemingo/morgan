@@ -110,9 +110,10 @@ func tkDispatcher(g *Coder, tk *Token) {
 }
 
 func codeNewLine(g *Coder, tk *Token) {
-	stk := g.stack.pop()
+	stk := g.stack.top()
 	if isHeader(stk) {
 		g.output += "</" + tokenTag(stk) + ">\n"
+		g.stack.pop()
 		return
 	}
 
@@ -135,7 +136,7 @@ func codeItemList(g *Coder, tk *Token) {
 		g.output += "\n<ul>"
 	}
 
-	g.output += "\n<li> "
+	g.output += "\n<li>"
 
 	for {
 		ntk := g.next()
@@ -184,7 +185,6 @@ func codeUrl(g *Coder, tk *Token) {
 }
 
 func codeHeader(g *Coder, tk *Token) {
-
 	g.output += "\n<" + tokenTag(tk) + ">"
 	g.stack.push(tk)
 }
@@ -215,14 +215,12 @@ func checkFinishedLists(g *Coder, tk *Token) {
 
 	tkContext := g.stack.top()
 	if tkContext.ttype == ulistTk {
-		if tk.ttype != newLineTk && tk.offset < tkContext.offset {
+		if tk.ttype != newLineTk && tk.ttype != blankTk && tk.offset < tkContext.offset {
 			g.output += "\n</ul>\n"
 			g.stack.pop()
 		}
-
 		// TODO: in org mode lists can be finished with a
 		// double newLine character
-
 	}
 }
 

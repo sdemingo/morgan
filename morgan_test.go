@@ -46,16 +46,19 @@ Lorem ipsum /dolor sit amet/.
 // 	fmt.Println(html)
 // }
 
-// func TestHTMLItemLists(t *testing.T) {
-// 	test := `
-// Lorem ipsum dolor sit amet, consectetuer adipiscing:
-//   - Item 1
-//   - Item 2:
-//     Proin quam nisl, tincidunt et.
-//   - Item 3
+func TestHTMLItemLists(t *testing.T) {
+	test := `
+Lorem ipsum dolor sit amet, consectetuer adipiscing:
+  - Item 1
+  - Item 2:
+    Proin quam nisl, tincidunt et.
 
-// `
-// 	parser := HTMLParser(test)
-// 	html := parser.Output()
-// 	fmt.Println(html)
-// }
+    bla bla bla
+  - Item 3
+
+Bla bla
+`
+	parser := HTMLParser(test)
+	html := parser.Output()
+	fmt.Println(html)
+}

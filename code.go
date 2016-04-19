@@ -98,8 +98,10 @@ func tkDispatcher(g *Coder, tk *Token) {
 		codeInline(g, tk)
 	case textTk:
 		g.output += tk.value
+	case blankTk:
+		g.output += " "
 	case urlTk:
-		codeDirectUrl(g, tk)
+		codeUrl(g, tk)
 	case hyphenTk:
 		codeItemList(g, tk)
 	case newLineTk:
@@ -115,17 +117,18 @@ func codeNewLine(g *Coder, tk *Token) {
 	}
 
 	ntk := g.next()
-	if ntk.ttype == newLineTk {
+	if ntk.ttype == newLineTk { //two newlines
 		g.output += "\n<br>\n"
 	}
-	g.back(ntk)
 
+	g.output += " "
+	g.back(ntk)
 }
 
 func codeItemList(g *Coder, tk *Token) {
 
-	itemOffset := tk.offset + 1
-	rootListToken := Token{ulistTk, "ul", itemOffset - 1}
+	itemOffset := tk.offset
+	rootListToken := Token{ulistTk, "ul", itemOffset}
 
 	if g.stack.top().ttype != ulistTk {
 		g.stack.push(&rootListToken)
@@ -150,7 +153,7 @@ func codeItemList(g *Coder, tk *Token) {
 }
 
 func codeInline(g *Coder, tk *Token) {
-	g.output += " <" + tokenTag(tk) + "> "
+	g.output += "<" + tokenTag(tk) + ">"
 	for {
 		ntk := g.next()
 		if ntk.ttype == nullTk {
@@ -161,17 +164,21 @@ func codeInline(g *Coder, tk *Token) {
 		}
 		tkDispatcher(g, ntk)
 	}
-	g.output += " </" + tokenTag(tk) + "> "
+	g.output += "</" + tokenTag(tk) + ">"
 }
 
-func codeDirectUrl(g *Coder, tk *Token) {
+func codeUrl(g *Coder, tk *Token) {
 	url := strings.TrimSpace(tk.value)
 
 	ntk := g.next()
 	if ntk.ttype == urlTextTk {
-		g.output += " <a href=\"" + url + "\">" + ntk.value + "</a> "
+		g.output += "<a href=\"" + url + "\">" + ntk.value + "</a>"
 	} else {
-		g.output += " <a href=\"" + url + "\">" + url + "</a> "
+		if isImageUrl(url) {
+			g.output += "<img src=\"" + url + "\"/>"
+		} else {
+			g.output += "<a href=\"" + url + "\">" + url + "</a>"
+		}
 		g.back(ntk)
 	}
 }
@@ -217,4 +224,8 @@ func checkFinishedLists(g *Coder, tk *Token) {
 		// double newLine character
 
 	}
+}
+
+func isImageUrl(url string) bool {
+	return strings.HasSuffix(url, ".jpg") || strings.HasSuffix(url, ".png")
 }

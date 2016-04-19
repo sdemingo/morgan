@@ -38,6 +38,7 @@ const (
 	boldTk
 	urlTk
 	urlTextTk
+	blankTk //15
 )
 
 type Lexer struct {
@@ -116,18 +117,19 @@ func lexInitState(l *Lexer) stateFunc {
 		return nil
 	}
 
+	if isNewline(r) {
+		l.offset = 0
+		return consumeNewLines
+	}
+
 	l.incOffset(r)
 
 	if isWhitespace(r) {
 		return consumeSpaces
 	}
 
-	if isNewline(r) {
-		l.offset = 0
-		return consumeNewLines
-	}
-
 	if isPunctuation(r) {
+		l.emit(textTk)
 		return lexInitState
 	}
 
@@ -286,11 +288,14 @@ func consumeSpaces(l *Lexer) stateFunc {
 			return nil
 		}
 
+		l.incOffset(r)
+
 		if !isWhitespace(r) {
 			break
 		}
 	}
 	l.unread(r)
+	l.emit(blankTk)
 	return lexInitState
 }
 

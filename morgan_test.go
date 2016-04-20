@@ -6,7 +6,8 @@ import (
 )
 
 // func TestHTMLHeaders(t *testing.T) {
-// 	test := `* Test Article title
+// 	test := `
+// * Test Article title
 // ** Test Subheader
 // *** Test Subheader
 // * Other header
@@ -17,18 +18,18 @@ import (
 // 	fmt.Println(html)
 // }
 
-func TestHTMLInlines(t *testing.T) {
-	test := `Lorem ipsum /dolor sit amet/, consectetuer adipiscing
-*elit*. Donec hendrerit tempor tellus. =Donec pretium posuere=
-tellus. Proin quam nisl, tincidunt et, mattis eget, convallis nec,
-purus.
+// func TestHTMLInlines(t *testing.T) {
+// 	test := `Lorem ipsum /dolor sit amet/, consectetuer adipiscing
+// *elit*. Donec hendrerit tempor tellus. =Donec pretium posuere=
+// tellus. Proin quam nisl, tincidunt et, mattis eget, convallis nec,
+// purus.
 
-Lorem ipsum /dolor sit amet/.
-`
-	parser := HTMLParser(test)
-	html := parser.Output()
-	fmt.Println(html)
-}
+// Lorem ipsum /dolor sit amet/.
+// `
+// 	parser := HTMLParser(test)
+// 	html := parser.Output()
+// 	fmt.Println(html)
+// }
 
 // func TestHTMLLinks(t *testing.T) {
 
@@ -55,6 +56,7 @@ Lorem ipsum dolor sit amet, consectetuer adipiscing:
 
     bla bla bla
   - Item 3
+
 
 Bla bla
 `

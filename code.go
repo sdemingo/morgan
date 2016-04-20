@@ -16,7 +16,7 @@ func (s *Stack) push(v *Token) {
 
 func (s *Stack) pop() *Token {
 	if len(*s) <= 0 {
-		return nullToken
+		return &Token{nullTk, "", 0}
 	}
 	res := (*s)[len(*s)-1]
 	*s = (*s)[:len(*s)-1]
@@ -25,7 +25,7 @@ func (s *Stack) pop() *Token {
 
 func (s *Stack) top() *Token {
 	if len(*s) <= 0 {
-		return nullToken
+		return &Token{nullTk, "", 0}
 	}
 	return (*s)[len(*s)-1]
 }
@@ -65,7 +65,7 @@ func (g *Coder) next() *Token {
 	if ok {
 		return tk
 	}
-	return nullToken
+	return &Token{nullTk, "", 0}
 }
 
 func (g *Coder) back(t *Token) {
@@ -89,7 +89,7 @@ func tkDispatcher(g *Coder, tk *Token) {
 		fmt.Println(tk)
 	}
 
-	checkFinishedLists(g, tk)
+	closeOpenedLists(g, tk)
 
 	switch tk.ttype {
 	case header1Tk, header2Tk, header3Tk, header4Tk:
@@ -97,7 +97,7 @@ func tkDispatcher(g *Coder, tk *Token) {
 	case italicTk, monoTk, ulineTk, boldTk:
 		codeInline(g, tk)
 	case textTk:
-		g.output += tk.value
+		codeText(g, tk)
 	case blankTk:
 		g.output += " "
 	case urlTk:
@@ -109,21 +109,32 @@ func tkDispatcher(g *Coder, tk *Token) {
 	}
 }
 
-func codeNewLine(g *Coder, tk *Token) {
+func codeText(g *Coder, tk *Token) {
 	stk := g.stack.top()
-	if isHeader(stk) {
-		g.output += "</" + tokenTag(stk) + ">\n"
-		g.stack.pop()
-		return
+	if !isHeader(stk) && stk.ttype != ulistTk {
+		if stk.ttype != parTk {
+			g.stack.push(&Token{parTk, "", 0})
+			g.output += "\n<p>"
+		}
 	}
+
+	g.output += tk.value
+}
+
+func codeNewLine(g *Coder, tk *Token) {
+
+	// close tags which must be closed with one breakline
+	closeOpenedHeader(g, tk)
 
 	ntk := g.next()
-	if ntk.ttype == newLineTk { //two newlines
-		g.output += "\n<br>\n"
+	// close tags which must be closed with two breakline
+	if ntk.ttype == newLineTk || ntk.ttype == nullTk {
+		closeOpenedPar(g, tk)
 	}
+	g.back(ntk)
 
 	g.output += " "
-	g.back(ntk)
+
 }
 
 func codeItemList(g *Coder, tk *Token) {
@@ -132,6 +143,12 @@ func codeItemList(g *Coder, tk *Token) {
 	rootListToken := Token{ulistTk, "ul", itemOffset}
 
 	if g.stack.top().ttype != ulistTk {
+		// before opened a list, close other container tags as
+		// paragraphs, ...
+		if g.stack.top().ttype == parTk {
+			g.stack.pop()
+			g.output += "</p>\n"
+		}
 		g.stack.push(&rootListToken)
 		g.output += "\n<ul>"
 	}
@@ -199,6 +216,8 @@ func tokenTag(tk *Token) string {
 		return "u"
 	case boldTk:
 		return "b"
+	case parTk:
+		return "p"
 	case header1Tk:
 		return "h1"
 	case header2Tk:
@@ -211,16 +230,42 @@ func tokenTag(tk *Token) string {
 	return ""
 }
 
-func checkFinishedLists(g *Coder, tk *Token) {
+func closeOpenedLists(g *Coder, tk *Token) {
 
 	tkContext := g.stack.top()
 	if tkContext.ttype == ulistTk {
+
 		if tk.ttype != newLineTk && tk.ttype != blankTk && tk.offset < tkContext.offset {
 			g.output += "\n</ul>\n"
 			g.stack.pop()
 		}
+
 		// TODO: in org mode lists can be finished with a
 		// double newLine character
+	}
+}
+
+func closeOpenedPar(g *Coder, tk *Token) {
+	if tk.ttype != newLineTk {
+		return
+	}
+
+	if g.stack.top().ttype == parTk {
+		g.output += "</p>\n"
+	} else {
+		g.output += "\n<br>\n"
+	}
+}
+
+func closeOpenedHeader(g *Coder, tk *Token) {
+	if tk.ttype != newLineTk {
+		return
+	}
+	stk := g.stack.top()
+	if isHeader(stk) { //tags which must be closed with one breakline
+		g.output += "</" + tokenTag(stk) + ">\n"
+		g.stack.pop()
+		return
 	}
 }
 

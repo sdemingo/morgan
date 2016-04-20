@@ -20,7 +20,8 @@ func (tk *Token) String() string {
 }
 
 var eof = rune(0)
-var nullToken = &Token{ttype: nullTk, value: "NullToken"}
+
+//var nullToken = &Token{ttype: nullTk, value: "NullToken"}
 
 const (
 	nullTk    = iota
@@ -39,6 +40,7 @@ const (
 	urlTk
 	urlTextTk
 	blankTk //15
+	parTk
 )
 
 type Lexer struct {

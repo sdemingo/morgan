@@ -41,6 +41,7 @@ const (
 	urlTextTk
 	blankTk //15
 	parTk
+	codeTk
 )
 
 type Lexer struct {
@@ -146,6 +147,8 @@ func lexInitState(l *Lexer) stateFunc {
 		l.unread(next)
 		l.emit(boldTk)
 		return lexInitState
+	case '#':
+		return sharpState
 	case '-':
 		l.emit(hyphenTk)
 		return lexInitState
@@ -162,6 +165,22 @@ func lexInitState(l *Lexer) stateFunc {
 
 	l.unread(r)
 	return textState
+}
+
+func sharpState(l *Lexer) stateFunc {
+	// prev := l.prev()
+	// if !isWhitespace(prev) || !isNewline(prev) {
+	// 	l.unread('#')
+	// 	return textState
+	// }
+
+	if strings.HasPrefix(l.input[l.pos:], "+BEGIN_SRC") ||
+		strings.HasPrefix(l.input[l.pos:], "+END_SRC") {
+		consumeAllUntil(l, '\n')
+		l.emit(codeTk)
+	}
+
+	return lexInitState
 }
 
 func headerState(l *Lexer) stateFunc {
@@ -298,6 +317,24 @@ func consumeSpaces(l *Lexer) stateFunc {
 	}
 	l.unread(r)
 	l.emit(blankTk)
+	return lexInitState
+}
+
+func consumeAllUntil(l *Lexer, ur rune) stateFunc {
+	var r rune
+	for {
+		r = l.read()
+		if r == eof {
+			return nil
+		}
+
+		l.incOffset(r)
+
+		if r == ur {
+			break
+		}
+	}
+	l.unread(r)
 	return lexInitState
 }
 

@@ -1,3 +1,12 @@
+
+#+TITLE: Test title
+#+PROPERTY: prop1
+
+:PROPERTIES:
+:Title:    Goldberg Variations
+:Composer: J.S. Bach
+:END:
+
 Pellentesque dapibus. Preparamos 
 una lista:
  - item1

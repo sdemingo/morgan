@@ -91,6 +91,13 @@ func tkDispatcher(g *Coder, tk *Token) {
 
 	closeOpenedLists(g, tk)
 
+	if g.stack.top().ttype == codeTk {
+		if tk.ttype != codeTk {
+			g.output += tk.value
+			return
+		}
+	}
+
 	switch tk.ttype {
 	case header1Tk, header2Tk, header3Tk, header4Tk:
 		codeHeader(g, tk)
@@ -106,6 +113,8 @@ func tkDispatcher(g *Coder, tk *Token) {
 		codeItemList(g, tk)
 	case newLineTk:
 		codeNewLine(g, tk)
+	case codeTk:
+		codeSnippets(g, tk)
 	}
 }
 
@@ -127,14 +136,27 @@ func codeNewLine(g *Coder, tk *Token) {
 	closeOpenedHeader(g, tk)
 
 	ntk := g.next()
-	// close tags which must be closed with two breakline
-	if ntk.ttype == newLineTk || ntk.ttype == nullTk {
+	// close tags which must be closed with two breakline or a
+	// breakline and a new container opentag
+	if ntk.ttype == newLineTk || ntk.ttype == nullTk || ntk.ttype == codeTk {
 		closeOpenedPar(g, tk)
 	}
 	g.back(ntk)
 
 	g.output += " "
 
+}
+
+func codeSnippets(g *Coder, tk *Token) {
+
+	if g.stack.top().ttype == codeTk {
+		g.output += "\n</code></pre>\n"
+		g.stack.pop()
+		return
+	}
+
+	g.output += "\n<pre><code>\n"
+	g.stack.push(tk)
 }
 
 func codeItemList(g *Coder, tk *Token) {
@@ -252,9 +274,10 @@ func closeOpenedPar(g *Coder, tk *Token) {
 
 	if g.stack.top().ttype == parTk {
 		g.output += "</p>\n"
-	} else {
-		g.output += "\n<br>\n"
-	}
+		g.stack.pop()
+	} //  else {
+	// 	g.output += "\n<br>\n"
+	// }
 }
 
 func closeOpenedHeader(g *Coder, tk *Token) {

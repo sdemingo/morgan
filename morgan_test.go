@@ -52,13 +52,29 @@ func TestHTMLItemLists(t *testing.T) {
 Lorem ipsum dolor sit amet, consectetuer adipiscing:
   - Item 1
   - Item 2:
-    Proin quam nisl, tincidunt et.
-
+     - Proin quam nisl, tincidunt et.
+     - Nueva lista
     bla bla bla
   - Item 3
 
 
 Bla bla
+`
+	parser := HTMLParser(test)
+	html := parser.Output()
+	fmt.Println(html)
+}
+
+func TestHTMLCode(t *testing.T) {
+	test := `
+Lorem ipsum dolor sit amet, consectetuer adipiscing:
+#+BEGIN_SRC sh
+go get github.com/sdemingo/morgan
+rm -rf /foo/bar
+#+END_SRC
+
+Bla bla
+
 `
 	parser := HTMLParser(test)
 	html := parser.Output()

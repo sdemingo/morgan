@@ -41,7 +41,6 @@ ut.  `
    - Sorted lists
    - Tables
    - Properties
-   - Source code chunks
 
 
 

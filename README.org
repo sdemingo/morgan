@@ -40,7 +40,6 @@ ut.  `
    - Nested lists
    - Sorted lists
    - Tables
-   - Properties
 
 
 

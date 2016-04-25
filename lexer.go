@@ -21,8 +21,6 @@ func (tk *Token) String() string {
 
 var eof = rune(0)
 
-//var nullToken = &Token{ttype: nullTk, value: "NullToken"}
-
 const (
 	nullTk    = iota
 	header1Tk //1
@@ -42,6 +40,7 @@ const (
 	blankTk //15
 	parTk
 	codeTk
+	propBlockTk
 )
 
 type Lexer struct {
@@ -149,6 +148,8 @@ func lexInitState(l *Lexer) stateFunc {
 		return lexInitState
 	case '#':
 		return sharpState
+	case ':':
+		return propBlockState
 	case '-':
 		l.emit(hyphenTk)
 		return lexInitState
@@ -168,18 +169,34 @@ func lexInitState(l *Lexer) stateFunc {
 }
 
 func sharpState(l *Lexer) stateFunc {
-	// prev := l.prev()
-	// if !isWhitespace(prev) || !isNewline(prev) {
-	// 	l.unread('#')
-	// 	return textState
-	// }
-
 	if strings.HasPrefix(l.input[l.pos:], "+BEGIN_SRC") ||
 		strings.HasPrefix(l.input[l.pos:], "+END_SRC") {
 		consumeAllUntil(l, '\n')
 		l.emit(codeTk)
+		return lexInitState
 	}
 
+	// ignore properties
+	if strings.HasPrefix(l.input[l.pos:], "+") {
+		consumeAllUntil(l, '\n')
+		return lexInitState
+	}
+
+	return lexInitState
+}
+
+func propBlockState(l *Lexer) stateFunc {
+	if strings.HasPrefix(l.input[l.pos:], "PROPERTIES:") {
+		until := strings.Index(l.input[l.pos:], ":END:")
+		if until < 0 {
+			return lexInitState
+		}
+
+		l.start = l.pos
+		l.pos += until + len(":END:")
+
+		l.emit(propBlockTk)
+	}
 	return lexInitState
 }
 

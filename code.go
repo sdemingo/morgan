@@ -115,6 +115,8 @@ func tkDispatcher(g *Coder, tk *Token) {
 		codeNewLine(g, tk)
 	case codeTk:
 		codeSnippets(g, tk)
+	case propBlockTk:
+		g.output += "<!--\n" + tk.value + "\n-->"
 	}
 }
 

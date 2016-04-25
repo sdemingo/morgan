@@ -67,6 +67,17 @@ Bla bla
 
 func TestHTMLCode(t *testing.T) {
 	test := `
+
+#+TITLE: Test title
+#+PROPERTY: prop1
+
+:PROPERTIES:
+:Title:    Goldberg Variations
+:Composer: J.S. Bach
+:END:
+
+Pellentesque dapibus. Preparamos  una lista.
+
 Lorem ipsum dolor sit amet, consectetuer adipiscing:
 #+BEGIN_SRC sh
 go get github.com/sdemingo/morgan

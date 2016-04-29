@@ -30,11 +30,44 @@ func (s *Stack) top() *Token {
 	return (*s)[len(*s)-1]
 }
 
+// simple FIFO tokens buffer
+type TokenBuffer []*Token
+
+func (tb *TokenBuffer) push(t *Token) {
+	for i := range *tb {
+		if i < len(*tb)-1 {
+			(*tb)[i+1] = (*tb)[i]
+		}
+	}
+	(*tb)[0] = t
+}
+
+// remove header of the queue
+func (tb *TokenBuffer) remove() {
+	for i := range *tb {
+		if i < len(*tb)-1 {
+			(*tb)[i] = (*tb)[i+1]
+		}
+	}
+	(*tb)[len(*tb)-1] = nil
+}
+
+// Coder struct:
+//
+// - lex: is the Lexer
+// - wg: it the proccess group for wait the coder childs
+// - stack: is to heap the enviroments proccessed and
+//   to know the correct order to close them
+// - backed: is a stack to put an unread token after read it
+//   from the lex chanel.
+// - readed: is a queue to remains lasts n tokens readed
+
 type Coder struct {
 	lex    *Lexer
 	wg     sync.WaitGroup
 	stack  Stack
 	backed Stack
+	readed TokenBuffer
 	output string
 }
 
@@ -42,7 +75,8 @@ func HTMLParser(input string) *Coder {
 	l := newLexer(input)
 	g := &Coder{
 		lex:    l,
-		output: ""}
+		output: "",
+		readed: make([]*Token, 5)}
 
 	g.wg.Add(1)
 	go g.run()
@@ -58,18 +92,23 @@ func (g *Coder) Output() string {
 func (g *Coder) next() *Token {
 	tk := g.backed.pop()
 	if tk.ttype != nullTk {
+		g.readed.push(tk)
 		return tk
 	}
 
 	tk, ok := <-g.lex.tokens
 	if ok {
+		g.readed.push(tk)
 		return tk
 	}
-	return &Token{nullTk, "", 0}
+	tk = &Token{nullTk, "", 0}
+	g.readed.push(tk)
+	return tk
 }
 
 func (g *Coder) back(t *Token) {
 	g.backed.push(t)
+	g.readed.remove()
 }
 
 func (g *Coder) run() {
@@ -107,6 +146,8 @@ func tkDispatcher(g *Coder, tk *Token) {
 		codeText(g, tk)
 	case blankTk:
 		g.output += " "
+	case numberTk:
+		g.output += tk.value
 	case urlTk:
 		codeUrl(g, tk)
 	case hyphenTk:

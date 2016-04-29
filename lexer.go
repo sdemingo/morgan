@@ -42,6 +42,7 @@ const (
 	parTk
 	codeTk
 	propBlockTk
+	numberTk //19
 )
 
 type Lexer struct {
@@ -137,7 +138,7 @@ func lexInitState(l *Lexer) stateFunc {
 	}
 
 	if unicode.IsNumber(r) {
-		// detect if is a normal number or a item of sorted list
+		return numberState
 	}
 
 	switch r {
@@ -156,7 +157,8 @@ func lexInitState(l *Lexer) stateFunc {
 	case ':':
 		return propBlockState
 	case '-':
-		return itemListState
+		l.emit(hyphenTk)
+		return lexInitState
 	case '/':
 		l.emit(italicTk)
 		return lexInitState
@@ -170,6 +172,24 @@ func lexInitState(l *Lexer) stateFunc {
 
 	l.unread(r)
 	return textState
+}
+
+func numberState(l *Lexer) stateFunc {
+	var r rune
+	for {
+		r = l.read()
+		if r == eof {
+			return nil
+		}
+
+		if !unicode.IsNumber(r) {
+			break
+		}
+	}
+
+	l.unread(r)
+	l.emit(numberTk)
+	return lexInitState
 }
 
 func sharpState(l *Lexer) stateFunc {
@@ -186,11 +206,6 @@ func sharpState(l *Lexer) stateFunc {
 		return lexInitState
 	}
 
-	return lexInitState
-}
-
-func itemListState(l *Lexer) stateFunc {
-	l.emit(hyphenTk)
 	return lexInitState
 }
 

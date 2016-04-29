@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -135,6 +136,10 @@ func lexInitState(l *Lexer) stateFunc {
 		return lexInitState
 	}
 
+	if unicode.IsNumber(r) {
+		// detect if is a normal number or a item of sorted list
+	}
+
 	switch r {
 	case '*':
 		prev := l.prev()
@@ -151,8 +156,7 @@ func lexInitState(l *Lexer) stateFunc {
 	case ':':
 		return propBlockState
 	case '-':
-		l.emit(hyphenTk)
-		return lexInitState
+		return itemListState
 	case '/':
 		l.emit(italicTk)
 		return lexInitState
@@ -182,6 +186,11 @@ func sharpState(l *Lexer) stateFunc {
 		return lexInitState
 	}
 
+	return lexInitState
+}
+
+func itemListState(l *Lexer) stateFunc {
+	l.emit(hyphenTk)
 	return lexInitState
 }
 
@@ -365,7 +374,7 @@ func consumeString(l *Lexer, pref string) int {
 }
 
 func isWhitespace(ch rune) bool {
-	return ch == ' ' || ch == '\t'
+	return unicode.IsSpace(ch)
 }
 
 func isNewline(ch rune) bool {

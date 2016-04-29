@@ -57,6 +57,10 @@ Lorem ipsum dolor sit amet, consectetuer adipiscing:
     bla bla bla
   - Item 3
 
+Other sorted list:
+   1. Item 1
+   2. Item 2
+   3. Item 3
 
 Bla bla
 `
@@ -65,29 +69,29 @@ Bla bla
 	fmt.Println(html)
 }
 
-func TestHTMLCode(t *testing.T) {
-	test := `
+// func TestHTMLCode(t *testing.T) {
+// 	test := `
 
-#+TITLE: Test title
-#+PROPERTY: prop1
+// #+TITLE: Test title
+// #+PROPERTY: prop1
 
-:PROPERTIES:
-:Title:    Goldberg Variations
-:Composer: J.S. Bach
-:END:
+// :PROPERTIES:
+// :Title:    Goldberg Variations
+// :Composer: J.S. Bach
+// :END:
 
-Pellentesque dapibus. Preparamos  una lista.
+// Pellentesque dapibus. Preparamos  una lista.
 
-Lorem ipsum dolor sit amet, consectetuer adipiscing:
-#+BEGIN_SRC sh
-go get github.com/sdemingo/morgan
-rm -rf /foo/bar
-#+END_SRC
+// Lorem ipsum dolor sit amet, consectetuer adipiscing:
+// #+BEGIN_SRC sh
+// go get github.com/sdemingo/morgan
+// rm -rf /foo/bar
+// #+END_SRC
 
-Bla bla
+// Bla bla
 
-`
-	parser := HTMLParser(test)
-	html := parser.Output()
-	fmt.Println(html)
-}
+// `
+// 	parser := HTMLParser(test)
+// 	html := parser.Output()
+// 	fmt.Println(html)
+// }

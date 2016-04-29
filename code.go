@@ -30,26 +30,12 @@ func (s *Stack) top() *Token {
 	return (*s)[len(*s)-1]
 }
 
-// simple FIFO tokens buffer
-type TokenBuffer []*Token
-
-func (tb *TokenBuffer) push(t *Token) {
-	for i := range *tb {
-		if i < len(*tb)-1 {
-			(*tb)[i+1] = (*tb)[i]
-		}
+func (s *Stack) deep(i int) *Token {
+	i++
+	if len(*s) <= 0 || len(*s)-i < 0 {
+		return &Token{nullTk, "", 0}
 	}
-	(*tb)[0] = t
-}
-
-// remove header of the queue
-func (tb *TokenBuffer) remove() {
-	for i := range *tb {
-		if i < len(*tb)-1 {
-			(*tb)[i] = (*tb)[i+1]
-		}
-	}
-	(*tb)[len(*tb)-1] = nil
+	return (*s)[len(*s)-i]
 }
 
 // Coder struct:
@@ -60,14 +46,14 @@ func (tb *TokenBuffer) remove() {
 //   to know the correct order to close them
 // - backed: is a stack to put an unread token after read it
 //   from the lex chanel.
-// - readed: is a queue to remains lasts n tokens readed
+// - readed: is a stack to remains lasts n tokens readed
 
 type Coder struct {
 	lex    *Lexer
 	wg     sync.WaitGroup
 	stack  Stack
 	backed Stack
-	readed TokenBuffer
+	readed Stack
 	output string
 }
 
@@ -76,7 +62,7 @@ func HTMLParser(input string) *Coder {
 	g := &Coder{
 		lex:    l,
 		output: "",
-		readed: make([]*Token, 5)}
+		readed: make([]*Token, 0)}
 
 	g.wg.Add(1)
 	go g.run()
@@ -108,7 +94,7 @@ func (g *Coder) next() *Token {
 
 func (g *Coder) back(t *Token) {
 	g.backed.push(t)
-	g.readed.remove()
+	g.readed.pop()
 }
 
 func (g *Coder) run() {
@@ -204,6 +190,12 @@ func codeSnippets(g *Coder, tk *Token) {
 
 func codeItemList(g *Coder, tk *Token) {
 
+	// Check if last readed token is a space and a newline
+	if !(g.readed.deep(1).ttype == blankTk) || !(g.readed.deep(2).ttype == newLineTk) {
+		printToken(g, tk)
+		return
+	}
+
 	itemOffset := tk.offset
 	rootListToken := Token{ulistTk, "ul", itemOffset}
 
@@ -269,6 +261,10 @@ func codeUrl(g *Coder, tk *Token) {
 func codeHeader(g *Coder, tk *Token) {
 	g.output += "\n<" + tokenTag(tk) + ">"
 	g.stack.push(tk)
+}
+
+func printToken(g *Coder, tk *Token) {
+	g.output += tk.value
 }
 
 func tokenTag(tk *Token) string {

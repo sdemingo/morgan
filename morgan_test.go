@@ -52,8 +52,9 @@ func TestHTMLItemLists(t *testing.T) {
 Lorem ipsum dolor sit amet, - bluff lista consectetuer adipiscing:
   - Item 1
   - Item 2:
-     - Proin quam nisl, tincidunt et.
-     - Nueva lista
+  - Proin quam nisl, tincidunt et.
+  - Nueva lista
+
     bla bla bla
   - Item 3
 

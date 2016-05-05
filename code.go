@@ -314,9 +314,9 @@ func closeOpenedPar(g *Coder, tk *Token) {
 	if g.stack.top().ttype == parTk {
 		g.output += "</p>\n"
 		g.stack.pop()
-	} //  else {
-	// 	g.output += "\n<br>\n"
-	// }
+	} else {
+		g.output += "\n<br>\n"
+	}
 }
 
 func closeOpenedHeader(g *Coder, tk *Token) {

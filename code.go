@@ -23,19 +23,16 @@ func (s *Stack) pop() *Token {
 	return res
 }
 
-func (s *Stack) top() *Token {
-	if len(*s) <= 0 {
-		return &Token{nullTk, "", 0}
-	}
-	return (*s)[len(*s)-1]
-}
-
 func (s *Stack) deep(i int) *Token {
 	i++
 	if len(*s) <= 0 || len(*s)-i < 0 {
 		return &Token{nullTk, "", 0}
 	}
 	return (*s)[len(*s)-i]
+}
+
+func (s *Stack) top() *Token {
+	return s.deep(0)
 }
 
 // Coder struct:
@@ -133,7 +130,7 @@ func tkDispatcher(g *Coder, tk *Token) {
 	case blankTk:
 		g.output += " "
 	case numberTk:
-		g.output += tk.value
+		codeItemList(g, tk)
 	case urlTk:
 		codeUrl(g, tk)
 	case hyphenTk:
@@ -147,9 +144,13 @@ func tkDispatcher(g *Coder, tk *Token) {
 	}
 }
 
+func codeNumber(g *Coder, tk *Token) {
+	g.output += tk.value
+}
+
 func codeText(g *Coder, tk *Token) {
 	stk := g.stack.top()
-	if !isHeader(stk) && stk.ttype != ulistTk {
+	if !isHeader(stk) && stk.ttype != ulistTk && stk.ttype != olistTk {
 		if stk.ttype != parTk {
 			g.stack.push(&Token{parTk, "", 0})
 			g.output += "\n<p>"
@@ -190,6 +191,10 @@ func codeSnippets(g *Coder, tk *Token) {
 
 func codeItemList(g *Coder, tk *Token) {
 
+	if tk.ttype != hyphenTk && tk.ttype != numberTk {
+		return
+	}
+
 	// Check if last readed token is a space and a newline
 	if !(g.readed.deep(1).ttype == blankTk) || !(g.readed.deep(2).ttype == newLineTk) {
 		printToken(g, tk)
@@ -197,17 +202,24 @@ func codeItemList(g *Coder, tk *Token) {
 	}
 
 	itemOffset := tk.offset
-	rootListToken := Token{ulistTk, "ul", itemOffset}
 
-	if g.stack.top().ttype != ulistTk {
+	var rootListToken *Token
+	if tk.ttype != numberTk {
+		rootListToken = &Token{ulistTk, "ul", itemOffset}
+	} else {
+		rootListToken = &Token{olistTk, "ol", itemOffset}
+		g.next() // ignore next token. It's the number separator from the item body
+	}
+
+	if g.stack.top().ttype != ulistTk && g.stack.top().ttype != olistTk {
 		// before opened a list, close other container tags as
 		// paragraphs, ...
 		if g.stack.top().ttype == parTk {
 			g.stack.pop()
 			g.output += "</p>\n"
 		}
-		g.stack.push(&rootListToken)
-		g.output += "\n<ul>"
+		g.stack.push(rootListToken)
+		g.output += "\n<" + rootListToken.value + ">"
 	}
 
 	g.output += "\n<li>"
@@ -293,16 +305,17 @@ func tokenTag(tk *Token) string {
 
 func closeOpenedLists(g *Coder, tk *Token) {
 
+	// TODO: in org mode lists can be finished with a
+	// double newLine character too
+
 	tkContext := g.stack.top()
-	if tkContext.ttype == ulistTk {
+	if tkContext.ttype == ulistTk || tkContext.ttype == olistTk {
 
 		if tk.ttype != newLineTk && tk.ttype != blankTk && tk.offset < tkContext.offset {
-			g.output += "\n</ul>\n"
+			g.output += "\n</" + tkContext.value + ">\n"
 			g.stack.pop()
 		}
 
-		// TODO: in org mode lists can be finished with a
-		// double newLine character
 	}
 }
 

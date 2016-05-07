@@ -32,17 +32,18 @@ const (
 	newLineTk
 	hyphenTk
 	ulistTk
-	italicTk
-	monoTk //10
+	olistTk
+	italicTk //10
+	monoTk
 	ulineTk
 	boldTk
 	urlTk
-	urlTextTk
-	blankTk //15
+	urlTextTk //15
+	blankTk
 	parTk
 	codeTk
 	propBlockTk
-	numberTk //19
+	numberTk //20
 )
 
 type Lexer struct {
@@ -105,7 +106,7 @@ func (l *Lexer) unread(rune rune) {
 }
 
 func (l *Lexer) incOffset(rune rune) {
-	if isWhitespace(rune) || rune == '-' {
+	if isWhitespace(rune) || rune == '-' || unicode.IsNumber(rune) {
 		l.offset++
 	}
 

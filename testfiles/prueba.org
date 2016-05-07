@@ -18,9 +18,10 @@ una lista:
    pesar de estar igual identado
 
 Otra lista ordenada:
-  1. Item 1
-  2. Item 2
-  3. Item 3
+  1) Item 1
+  2) Item 3
+  3) Item 2
+  4) Item 3
 
 * Cabecera con /letras cursivas/
 Suspendisse potenti.  Aenean in sem ac leo =mollis blandit=. Esto se escribe con

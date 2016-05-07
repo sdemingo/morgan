@@ -51,14 +51,18 @@ func TestHTMLItemLists(t *testing.T) {
 	test := `
 Lorem ipsum dolor sit amet, - bluff lista consectetuer adipiscing:
   - Item 1
-  - Item 2:
+  - Item 2
   - Proin quam nisl, tincidunt et.
   - Nueva lista
 
-    bla bla bla
+    bla bla bla 3
   - Item 3
 
-Bla bla
+Ahora pongo una segunda lista ordenada:
+   1. Item 1
+   2. Item 2
+   3. Item 3
+CuCu
 `
 	parser := HTMLParser(test)
 	html := parser.Output()

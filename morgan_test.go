@@ -8,7 +8,8 @@ import (
 func TestHTMLHeaders(t *testing.T) {
 	test := `
 * Test Article title
-** Test Subheader
+** TODO Test Subheader to do
+** DONE Test Subheader done
 *** Test Subheader
 * Other header
 `

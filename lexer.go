@@ -44,6 +44,7 @@ const (
 	codeTk
 	propBlockTk
 	numberTk //20
+	statusTk
 )
 
 type Lexer struct {
@@ -227,23 +228,38 @@ func propBlockState(l *Lexer) stateFunc {
 
 func headerState(l *Lexer) stateFunc {
 
+	emitedHdr := false
+
 	if strings.HasPrefix(l.input[l.pos:], "* ") {
 		l.pos++
 		l.emit(header2Tk)
-		return lexInitState
+		emitedHdr = true
 	}
 	if strings.HasPrefix(l.input[l.pos:], "** ") {
 		l.pos = l.pos + 2
 		l.emit(header3Tk)
-		return lexInitState
+		emitedHdr = true
 	}
 	if strings.HasPrefix(l.input[l.pos:], "*** ") {
 		l.pos = l.pos + 3
 		l.emit(header4Tk)
-		return lexInitState
+		emitedHdr = true
 	}
 
-	l.emit(header1Tk)
+	if !emitedHdr {
+		l.emit(header1Tk)
+	}
+
+	if strings.HasPrefix(l.input[l.pos:], " TODO ") {
+		l.pos = l.pos + 5
+		l.emit(statusTk)
+	}
+
+	if strings.HasPrefix(l.input[l.pos:], " DONE ") {
+		l.pos = l.pos + 5
+		l.emit(statusTk)
+	}
+
 	return lexInitState
 }
 

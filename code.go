@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-const debugMode = true
+const debugMode = false
 
 type Stack []*Token
 
@@ -195,12 +195,6 @@ func codeItemList(g *Coder, tk *Token) {
 		return
 	}
 
-	// // Check if last readed token is a space and a newline
-	// if !(g.readed.deep(1).ttype == blankTk) || !(g.readed.deep(2).ttype == newLineTk) {
-	// 	printToken(g, tk)
-	// 	return
-	// }
-
 	if !isFirstTokenOfLine(g) {
 		printToken(g, tk)
 		return
@@ -282,8 +276,20 @@ func codeUrl(g *Coder, tk *Token) {
 }
 
 func codeHeader(g *Coder, tk *Token) {
-	g.output += "\n<" + tokenTag(tk) + ">"
 	g.stack.push(tk)
+
+	status := ""
+	ntk := g.next()
+	if ntk.ttype == statusTk {
+		status = strings.TrimSpace(ntk.value)
+	} else {
+		g.back(ntk)
+	}
+	if status != "" {
+		g.output += "\n<" + tokenTag(tk) + " class=\"" + status + "\">"
+	} else {
+		g.output += "\n<" + tokenTag(tk) + ">"
+	}
 }
 
 func printToken(g *Coder, tk *Token) {

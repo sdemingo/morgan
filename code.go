@@ -195,8 +195,13 @@ func codeItemList(g *Coder, tk *Token) {
 		return
 	}
 
-	// Check if last readed token is a space and a newline
-	if !(g.readed.deep(1).ttype == blankTk) || !(g.readed.deep(2).ttype == newLineTk) {
+	// // Check if last readed token is a space and a newline
+	// if !(g.readed.deep(1).ttype == blankTk) || !(g.readed.deep(2).ttype == newLineTk) {
+	// 	printToken(g, tk)
+	// 	return
+	// }
+
+	if !isFirstTokenOfLine(g) {
 		printToken(g, tk)
 		return
 	}
@@ -229,7 +234,13 @@ func codeItemList(g *Coder, tk *Token) {
 		if ntk.ttype == nullTk {
 			return
 		}
+
 		if ntk.offset < itemOffset && ntk.ttype != newLineTk {
+			g.back(ntk)
+			break
+		}
+		// if the item lists start with the line (offset 1)
+		if ntk.offset == itemOffset && itemOffset == 1 {
 			g.back(ntk)
 			break
 		}
@@ -346,4 +357,20 @@ func closeOpenedHeader(g *Coder, tk *Token) {
 
 func isImageUrl(url string) bool {
 	return strings.HasSuffix(url, ".jpg") || strings.HasSuffix(url, ".png")
+}
+
+func isFirstTokenOfLine(g *Coder) bool {
+	i := 1
+	for {
+		prev := g.readed.deep(i)
+		if prev.ttype == newLineTk {
+			return true
+		}
+		if prev.ttype == nullTk || prev.ttype != blankTk {
+			return false
+		}
+		// if is blankTk continue
+		i++
+	}
+	return false
 }

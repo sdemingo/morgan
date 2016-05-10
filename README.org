@@ -37,11 +37,10 @@ ut.  `
 #+END_SRC
 
 ** To Do
-   - State (DONE,TODO) in headers
-   - Timestamps
    - Nested lists
    - Tables
 
 
 
+   
    

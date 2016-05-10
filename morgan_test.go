@@ -11,6 +11,10 @@ func TestHTMLHeaders(t *testing.T) {
 ** TODO Test Subheader to do
 ** DONE Test Subheader done
 *** Test Subheader
+   DEADLINE: <2016-05-10 mar 13:15>
+
+Meto un timestamp <2016-05-10 mar> estándar para ver como se exporta
+
 * Other header
 `
 	parser := HTMLParser(test)

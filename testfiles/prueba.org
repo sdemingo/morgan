@@ -28,6 +28,12 @@ Suspendisse potenti.  Aenean in sem ac leo =mollis blandit=. Esto se escribe con
 mono fuente _y esto debería ir subrayado_ y esto 
 *debería ir en negrita* y esto es un enlace directo http://www.google.com
 
+** Tarea 1
+   DEADLINE: <2016-05-10 mar>
+
+   Meto un timestamp <2016-05-10 mar> estándar para ver como se exporta
+   
+
 * Cabecera 2
 Pellentesque dapibus suscipit. Donec posuere augue in quam. /Etiam vel tortor
 sodales/ tellus ultricies commodo. (Fin del) documento. Pruebo una ( /cursiva

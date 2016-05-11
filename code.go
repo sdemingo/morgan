@@ -232,7 +232,7 @@ func codeItemList(g *Coder, tk *Token) {
 	for {
 		ntk := g.next()
 		if ntk.ttype == nullTk {
-			return
+			break
 		}
 
 		if ntk.offset < itemOffset && ntk.ttype != newLineTk {

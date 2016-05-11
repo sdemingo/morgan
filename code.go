@@ -141,11 +141,17 @@ func tkDispatcher(g *Coder, tk *Token) {
 		codeSnippets(g, tk)
 	case propBlockTk:
 		g.output += "<!--\n" + tk.value + "\n-->"
+	case timeStampTk:
+		codeTimeStamp(g, tk)
 	}
 }
 
 func codeNumber(g *Coder, tk *Token) {
 	g.output += tk.value
+}
+
+func codeTimeStamp(g *Coder, tk *Token) {
+	g.output += "<span class=\"date\">" + tk.value + "</span>"
 }
 
 func codeText(g *Coder, tk *Token) {

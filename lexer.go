@@ -2,6 +2,7 @@ package morgan
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"unicode"
@@ -45,6 +46,7 @@ const (
 	propBlockTk
 	numberTk //20
 	statusTk
+	timeStampTk
 )
 
 type Lexer struct {
@@ -170,6 +172,8 @@ func lexInitState(l *Lexer) stateFunc {
 	case '=':
 		l.emit(monoTk)
 		return lexInitState
+	case '<':
+		return timeStampState
 	}
 
 	l.unread(r)
@@ -191,6 +195,19 @@ func numberState(l *Lexer) stateFunc {
 
 	l.unread(r)
 	l.emit(numberTk)
+	return lexInitState
+}
+
+func timeStampState(l *Lexer) stateFunc {
+	//hourDateReg := regexp.MustCompile("\\<\\d{4}-\\d{2}-\\d{2}( .{3})?( \\d{2}:\\d{2})?\\>")
+	hourDateReg := regexp.MustCompile("\\d{4}-\\d{2}-\\d{2}( .{3})?( \\d{2}:\\d{2})?\\>")
+	dateExtracted := hourDateReg.FindString(l.input[l.pos:])
+	if dateExtracted != "" {
+		if strings.Index(l.input[l.pos:], dateExtracted) == 0 {
+			l.pos += len(dateExtracted)
+			l.emit(timeStampTk)
+		}
+	}
 	return lexInitState
 }
 

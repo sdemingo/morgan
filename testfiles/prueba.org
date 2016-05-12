@@ -17,6 +17,13 @@ una lista:
 
    pesar de estar igual identado
 
+Añado lista enlazada:
+   - Item 1
+   - Nueva lista:
+     - Subitem 1
+     - Subitem 2
+   - Item 3
+
 Otra lista ordenada:
   1) Item 1
   2) Item 3

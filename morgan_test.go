@@ -65,8 +65,17 @@ Otro tipo de lista sin margen:
 - Item 1
 - Item 2
 
-Removing this linea broke the last item of the list
+
 `
+
+	// Añado lista enlazada:
+	//    - Item 1
+	//    - Nueva lista:
+	//      - Subitem 1
+	//      - Subitem 2
+	//    - Item 3
+
+	// `
 	// Ahora pongo una segunda lista ordenada:
 	//    1. Item 1
 	//    2. Item 2
